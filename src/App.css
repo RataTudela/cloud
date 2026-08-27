@@ -1,0 +1,148 @@
+*{
+  box-sizing: border-box;
+  margin: 0;
+}
+body {
+  font-family: "Roboto Mono", monospace;
+  margin: 0;
+  background-color: #eded;
+}
+.fondo{
+  position: absolute;
+  width: 100vw;
+  height: 100%;
+  background-image: url('fondo.gif');
+  z-index: 1;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.overlay--fondo{
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2;
+  background: linear-gradient(#003f0080, #00000080);
+}
+
+.algo{
+  position: relative;
+  margin: 0;
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: center;
+  align-content: center;
+  margin: auto;
+}
+
+.block{
+  min-width:200px;
+  min-height: 300px;
+  display: flex;
+  flex-flow: column wrap;
+  z-index: 3;
+}
+
+.h1__fondo{
+  font-size: 32px;
+  text-align: center;
+  z-index: 3;
+  text-wrap: balance;
+  margin: auto;
+  color: #fff;
+  margin-bottom: 0px;
+  background-color:  #00800080;  
+  backdrop-filter: blur(6px);
+  border: 1px solid #000;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+h1{
+  position: relative;
+  font-family:"Roboto Mono", monospace;
+  font-size: 32px;
+}
+
+
+.forms{
+  position: relative;
+  background-color:  #00800080;  
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  min-width:50%;
+  min-height: 100px;
+  border-radius: 12px;
+  border: 1px solid #000;
+  box-shadow: 0px 0px 25px #fff0;
+  padding: 15px;
+  z-index: 3;
+  margin-top: 0px;
+  font-size: 24px;
+  margin: auto;
+  text-align: center;
+  text-wrap: pretty;
+  margin-top: 20px;
+}
+
+button{
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 24px;
+  outline: 1px solid rgb(69, 255, 152);
+  outline-offset: 0;
+  border-radius: 12px;
+  background-color: #00000090;
+  display: block;
+  margin: auto;
+  margin-top: 12px;
+  color: #fff;
+  padding: 6px 12px;
+  font-family: 'Robot Mono',sans-serif;
+  transition: outline-offset 0.4s ease, padding 0.4s ease, box-shadow 0.4s ease;
+}
+
+button:hover{
+  outline-offset: 1px;
+  padding: 8px 14px;
+  box-shadow: 0px 0px 12px #02d61490;
+}
+
+.circle {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px auto;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgb(69, 255, 152);
+  transition: width 0.5s ease, height 0.5s ease;
+  animation: girar 0.8s linear infinite;
+  z-index: 3;
+}
+
+.cirlce__center {
+  width: 36px;          
+  height: 36px;
+  background-color: transparent;
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+  z-index: 4;            
+}
+
+@keyframes girar{
+  from{
+    transform: rotate(360deg);
+  }to{
+    transform: rotate(0deg);
+  }
+}
+
+.circle:hover{
+    height: 60px;
+    width: 60px;
+}
