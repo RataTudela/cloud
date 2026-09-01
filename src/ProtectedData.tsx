@@ -4,17 +4,29 @@ import { useApi } from './useApi';
 
 export function ProtectedData() {
   const { fetchWithToken } = useApi();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleFetchData = async () => {
+  const handleCrearOrden = async () => {
     setLoading(true);
     try {
-      const res = await fetchWithToken('https://graph.microsoft.com/v1.0/me');
-      const json = await res.json();
-      setData(json);
+      // Petición POST al endpoint protegido en Spring Boot
+      const res = await fetchWithToken('http://localhost:8080/api/ordenes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: 'OT-101',
+          descripcion: 'Cambio de aceite y filtros',
+          estado: 'EN_PROCESO',
+        }),
+      });
+
+      const respuestaTexto = await res.text();
+      setData(respuestaTexto);
     } catch (err) {
-      console.error(err);
+      console.error('Error al consultar la API:', err);
     } finally {
       setLoading(false);
     }
@@ -23,10 +35,10 @@ export function ProtectedData() {
   return (
     <div>
       <AuthenticatedTemplate>
-        <button onClick={handleFetchData} disabled={loading}>
-          {loading ? 'Consultando...' : 'Obtener Datos del Usuario vía API'}
+        <button onClick={handleCrearOrden} disabled={loading}>
+          {loading ? 'Procesando...' : 'Crear Orden en Backend'}
         </button>
-        {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+        {data && <pre style={{ marginTop: '10px', color: '#02d614' }}>{data}</pre>}
       </AuthenticatedTemplate>
 
       <UnauthenticatedTemplate>

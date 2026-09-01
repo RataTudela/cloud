@@ -21,6 +21,10 @@ export const msalConfig: Configuration = {
   },
 };
 
+export const apiRequest = {
+  scopes: ["api://tallerpro360/OT.Create"]
+};
+
 export const loginRequest = {
   scopes: ['User.Read'],
 };

@@ -41,7 +41,6 @@ export default function App() {
       <div className='overlay--fondo'></div>
 
       <div className='algo'>
-        <div className='block'>
           
           {/* VISTA 1: ÉXITO */}
           {isAuthenticated ? (
@@ -59,7 +58,7 @@ export default function App() {
 
           /* VISTA INICIAL */
           ) : (
-            <div>
+            <div className='wrapper'>
               <div className='h1__fondo'>
                 <h1>Portal de Autenticación</h1>
               </div>
@@ -80,7 +79,6 @@ export default function App() {
           )}
 
         </div>
-      </div>
     </>
   );
 }
