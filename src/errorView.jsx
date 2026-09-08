@@ -1,9 +1,5 @@
-interface ErrorViewProps {
-  errorMessage: string;
-  onRetry: () => void;
-}
 
-export function ErrorView({ errorMessage, onRetry }: ErrorViewProps) {
+export function ErrorView({ errorMessage, onRetry }) {
   return (
     <div>
       <div className='h1__fondo' style={{ backgroundColor: 'rgba(180, 0, 0, 0.85)' }}>

@@ -4,7 +4,7 @@ import { useApi } from './useApi';
 
 export function ProtectedData() {
   const { fetchWithToken } = useApi();
-  const [data, setData] = useState<string | null>(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleCrearOrden = async () => {

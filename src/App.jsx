@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from './authConfig';
 import { SuccessView } from './vistaExito';
 import { ErrorView } from './errorView';
 import './App.css';
-import "@fontsource/roboto-mono"; 
-import "@fontsource/roboto-mono/700.css"; 
+import "@fontsource/roboto-mono";
+import "@fontsource/roboto-mono/700.css";
 
 export default function App() {
   const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   const currentUser = accounts[0];
 
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(null);
 
   const isLoading = inProgress !== InteractionStatus.None;
 
@@ -21,7 +21,7 @@ export default function App() {
   const handleLogin = () => {
     setAuthError(null);
     if (!isLoading) {
-      instance.loginRedirect(loginRequest).catch((error: any) => {
+      instance.loginRedirect(loginRequest).catch((error) => {
         console.error("Error de autenticación:", error);
         setAuthError(error?.errorMessage || "Se canceló o falló la autenticación con Microsoft.");
       });

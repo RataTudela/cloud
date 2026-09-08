@@ -1,11 +1,7 @@
 import { ProtectedData } from './ProtectedData';
 import './App.css'
-interface SuccessViewProps {
-  currentUser: any;
-  onLogout: () => void;
-}
 
-export function SuccessView({ currentUser, onLogout }: SuccessViewProps) {
+export function SuccessView({ currentUser, onLogout }) {
   return (
     <div>
       <div className='h1__fondo' style={{ backgroundColor: 'rgba(0, 128, 0, 0.8)' }}>

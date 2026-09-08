@@ -1,15 +1,12 @@
-import type { Configuration } from '@azure/msal-browser';
 import { LogLevel } from '@azure/msal-browser';
 
-export const msalConfig: Configuration = {
+export const msalConfig = {
   auth: {
     clientId: import.meta.env.VITE_AZURE_CLIENT_ID,
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID}`,
     redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI,
   },
-  cache: {
-    cacheLocation: 'localStorage',
-  },
+  cache: { cacheLocation: 'localStorage' },
   system: {
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {
@@ -21,10 +18,5 @@ export const msalConfig: Configuration = {
   },
 };
 
-export const apiRequest = {
-  scopes: ["api://tallerpro360/OT.Create"]
-};
-
-export const loginRequest = {
-  scopes: ['User.Read'],
-};
+export const apiRequest = { scopes: ["api://tallerpro360/OT.Create"] };
+export const loginRequest = { scopes: ['User.Read'] };
