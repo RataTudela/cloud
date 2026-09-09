@@ -4,35 +4,29 @@ import { InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from '../config/authConfig';
 import { useApi } from '../hooks/useApi';
 
-    const API_URL = import.meta.env.VITE_API_BASE_URL 
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/orders` 
-    : 'http://localhost:8081/api/orders';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+const ORDERS_API_URL = `${API_BASE}/api/orders`;
+const PRODUCTS_API_URL = `${API_BASE}/api/products`;
 
-    // Lista mock de productos (posteriormente se consumirá de ms-pedidos360-catalog)
-    const CATALOGO_PRODUCTOS = [
-    { id: 'PROD-001', name: 'Notebook Corp X', price: 850000 },
-    { id: 'PROD-002', name: 'Mouse Inalámbrico', price: 15000 },
-    { id: 'PROD-003', name: 'Teclado Mecánico', price: 45000 },
-    { id: 'PROD-004', name: 'Monitor 27 IPS', price: 180000 }
-    ];
-
-    export const OrdersPage = () => {
+export const OrdersPage = () => {
     const { instance, accounts, inProgress } = useMsal();
     const { fetchWithToken } = useApi();
     const [orders, setOrders] = useState([]);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
     // Estados para selección de productos dentro del pedido
     const [cartItems, setCartItems] = useState([]);
-    const [selectedProductId, setSelectedProductId] = useState(CATALOGO_PRODUCTOS[0].id);
+    const [selectedProductId, setSelectedProductId] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [statusFilter, setStatusFilter] = useState('todos');
 
     useEffect(() => {
         if (accounts.length > 0) {
         fetchOrders();
+        fetchProducts();
         }
     }, [accounts]);
 
@@ -42,11 +36,28 @@ import { useApi } from '../hooks/useApi';
         }
     };
 
+    const fetchProducts = async () => {
+        try {
+        const response = await fetchWithToken(PRODUCTS_API_URL);
+        if (response.ok) {
+            const data = await response.json();
+            setProducts(data);
+            if (data.length > 0) {
+            setSelectedProductId(data[0].id);
+            }
+        } else {
+            console.error('No se pudieron consultar los productos.');
+        }
+        } catch (err) {
+        console.error('Error de red al consultar productos:', err);
+        }
+    };
+
     const fetchOrders = async () => {
         setLoading(true);
         setErrorMsg('');
         try {
-        const response = await fetchWithToken(API_URL);
+        const response = await fetchWithToken(ORDERS_API_URL);
         if (response.ok) {
             const data = await response.json();
             setOrders(Array.isArray(data) ? data : [data]);
@@ -61,7 +72,7 @@ import { useApi } from '../hooks/useApi';
     };
 
     const handleAddItem = () => {
-        const prod = CATALOGO_PRODUCTOS.find(p => p.id === selectedProductId);
+        const prod = products.find(p => p.id === selectedProductId);
         if (!prod) return;
 
         const existingIndex = cartItems.findIndex(i => i.productId === prod.id);
@@ -99,7 +110,7 @@ import { useApi } from '../hooks/useApi';
         const newOrderId = `ORD-${Math.floor(Math.random() * 900) + 100}`;
         const totalAmount = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
 
-        const res = await fetchWithToken(API_URL, {
+        const res = await fetchWithToken(ORDERS_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -132,7 +143,7 @@ import { useApi } from '../hooks/useApi';
         setSuccessMsg('');
 
         try {
-        const res = await fetchWithToken(`${API_URL}/${orderId}/status?newStatus=${newStatus}`, {
+        const res = await fetchWithToken(`${ORDERS_API_URL}/${orderId}/status?newStatus=${newStatus}`, {
             method: 'PUT'
         });
 
@@ -167,7 +178,6 @@ import { useApi } from '../hooks/useApi';
 
         <AuthenticatedTemplate>
             <h1>Gestión de Pedidos</h1>
-
             <div className="forms__box">
             <form onSubmit={handleCreateOrder}>
                 <div className="inputs__row">
@@ -177,12 +187,17 @@ import { useApi } from '../hooks/useApi';
                     id="productSelect"
                     value={selectedProductId}
                     onChange={(e) => setSelectedProductId(e.target.value)}
+                    disabled={products.length === 0}
                     >
-                    {CATALOGO_PRODUCTOS.map((p) => (
+                    {products.length === 0 ? (
+                        <option value="">Cargando productos...</option>
+                    ) : (
+                        products.map((p) => (
                         <option key={p.id} value={p.id}>
-                        {p.name} - ${p.price.toLocaleString('es-CL')}
+                            {p.name} - ${p.price.toLocaleString('es-CL')} (Stock: {p.stock})
                         </option>
-                    ))}
+                        ))
+                    )}
                     </select>
                 </div>
 
@@ -202,49 +217,48 @@ import { useApi } from '../hooks/useApi';
                     type="button" 
                     className="btn__filter" 
                     onClick={handleAddItem}
-                    style={{ backgroundColor: '#2563eb' }}
+                    style={{ backgroundColor: 'rgba(225, 29, 72, 0.1);' }}
+                    disabled={products.length === 0}
                     >
                     + Agregar Producto
                     </button>
                 </div>
                 </div>
-
-                {/* Detalle de ítems agregados */}
                 {cartItems.length > 0 && (
-                <div style={{ marginTop: '15px' }}>
-                    <h5>Detalle del Pedido</h5>
-                    <ul className="list-group mb-3">
+                <div className="mt-4">
+                    <h5 className="text-white">Detalle del Pedido</h5>
+                    <div className="cart-grid">
                     {cartItems.map((item, idx) => (
-                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-center bg-dark text-white border-secondary">
-                        <span>{item.productName} (x{item.quantity})</span>
+                        <div key={idx} className="cart-card text-white">
                         <div>
-                            <span className="me-3">${(item.unitPrice * item.quantity).toLocaleString('es-CL')}</span>
-                            <button 
-                            type="button" 
-                            className="btn btn-sm btn-outline-danger" 
-                            onClick={() => handleRemoveItem(idx)}
-                            >
-                            ✕
+                            <p className='title'><strong className="d-block mb-1">{item.productName}</strong></p>
+                            <p><span className="text-muted small">Cantidad: {item.quantity}</span></p>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <span className="fw-bold text-success">
+                            ${(item.unitPrice * item.quantity).toLocaleString('es-CL')}
+                            </span>
+                            <button type="button" className="btn-absolute btn btn-sm btn-outline-danger" onClick={() => handleRemoveItem(idx)}>
+                            x
                             </button>
                         </div>
-                        </li>
+                        </div>
                     ))}
-                    </ul>
+                    </div>
                 </div>
                 )}
 
                 <div className="inputs__row" style={{ marginTop: '15px', gap: '10px' }}>
                 <button type="submit" className="btn__filter" disabled={loading || cartItems.length === 0}>
-                    {loading ? 'Procesando...' : '🛒 Confirmar y Crear Orden'}
+                    {loading ? 'Procesando...' : 'Confirmar y Crear Orden'}
                 </button>
                 <button 
                     type="button" 
                     className="btn__filter" 
-                    onClick={fetchOrders} 
+                    onClick={() => { fetchOrders(); fetchProducts(); }} 
                     disabled={loading}
-                    style={{ backgroundColor: '#4b5563' }}
-                >
-                    🔄 Recargar Lista
+                    style={{ backgroundColor: 'rgba(225, 29, 72, 0.1);' }}>
+                    Recargar Lista
                 </button>
                 </div>
             </form>
@@ -254,7 +268,8 @@ import { useApi } from '../hooks/useApi';
             {successMsg && <div className="alert alert-success my-3">{successMsg}</div>}
 
             {/* Tabla de Resultados */}
-            <div className="forms__box" style={{ marginTop: '20px' }}>
+          {/* Tabla de Resultados con Efecto Glass y Responsiva */}
+            <div className="table-glass-container mt-4">
             <div className="filter__group mb-3" style={{ maxWidth: '300px' }}>
                 <label htmlFor="statusFilter">Filtrar por Estado:</label>
                 <select 
@@ -272,7 +287,7 @@ import { useApi } from '../hooks/useApi';
                 </select>
             </div>
 
-            <table className="table table-dark table-hover align-middle mb-0">
+            <table className="custom-glass-table">
                 <thead>
                 <tr>
                     <th>ID Orden</th>
@@ -286,28 +301,32 @@ import { useApi } from '../hooks/useApi';
                 <tbody>
                 {filteredOrders.length === 0 ? (
                     <tr>
-                    <td colSpan="6" className="text-center py-4">
+                    <td colSpan="6" className="text-center py-4 text-muted">
                         {loading ? 'Cargando datos...' : 'No hay órdenes registradas.'}
                     </td>
                     </tr>
                 ) : (
                     filteredOrders.map((o) => (
                     <tr key={o.id}>
-                        <td className="fw-bold">{o.id}</td>
-                        <td>{o.customer}</td>
-                        <td>
+                        <td data-label="ID Orden">{o.id}</td>
+                        <td data-label="Cliente">{o.customer}</td>
+                        <td data-label="Productos">
                         {o.items && o.items.length > 0 ? (
-                            <ul className="mb-0 ps-3 small">
+                            <ul className="mb-0 ps-3 small list-unstyled">
                             {o.items.map((it, i) => (
-                                <li key={i}>{it.productName} (x{it.quantity})</li>
+                                <li key={i} className="text-info">
+                                • {it.productName} (x{it.quantity})
+                                </li>
                             ))}
                             </ul>
                         ) : (
                             <span className="text-muted">{o.description}</span>
                         )}
                         </td>
-                        <td>${(o.totalAmount || 0).toLocaleString('es-CL')}</td>
-                        <td>
+                        <td data-label="Total" className="text-success fw-bold">
+                        ${(o.totalAmount || 0).toLocaleString('es-CL')}
+                        </td>
+                        <td data-label="Estado">
                         <span className={`badge ${
                             o.status === 'CREADO' ? 'bg-secondary' :
                             o.status === 'ACEPTADO' ? 'bg-info text-dark' :
@@ -318,7 +337,7 @@ import { useApi } from '../hooks/useApi';
                             {o.status}
                         </span>
                         </td>
-                        <td>
+                        <td data-label="Cambiar Estado">
                         <select 
                             className="form-select form-select-sm bg-dark text-white border-secondary"
                             value={o.status}
@@ -342,4 +361,4 @@ import { useApi } from '../hooks/useApi';
         </AuthenticatedTemplate>
         </main>
     );
-    };
+};
