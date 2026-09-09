@@ -168,16 +168,18 @@ export const OrdersPage = () => {
     return (
         <main>
         <UnauthenticatedTemplate>
-            <h1>🔒 Autenticación Requerida</h1>
+            <h1>Autenticación Requerida</h1>
             <div className="forms__box text-center">
             <button type="button" className="btn__filter" onClick={handleLogin}>
-                🔑 Iniciar Sesión con Microsoft
+                Iniciar Sesión con Microsoft
             </button>
             </div>
         </UnauthenticatedTemplate>
 
         <AuthenticatedTemplate>
-            <h1>Gestión de Pedidos</h1>
+            <div className='h1__fondo'>
+                <h1>Gestión de Pedidos</h1>
+            </div>
             <div className="forms__box">
             <form onSubmit={handleCreateOrder}>
                 <div className="inputs__row">

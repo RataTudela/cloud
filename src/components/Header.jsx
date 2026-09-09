@@ -5,12 +5,9 @@ export function Header() {
         <header>
         <nav className="header__nav">
             <div className="logo">
-            <div className="logo__into">
-                <img 
-                src="https://media1.tenor.com/m/UMr2aYv-rIMAAAAC/portal.gif" 
-                alt="Pedidos360 Logo" 
-                />
-            </div>
+                <div className="logo__into">
+                        <i class="fa-solid fa-shopping-cart carrito-rojo"></i>
+                </div>
             </div>
             <ul className="nav__list">
             <li className="list__items">
