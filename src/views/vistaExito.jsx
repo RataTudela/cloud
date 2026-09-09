@@ -1,4 +1,4 @@
-import { ProtectedData } from './ProtectedData';
+import { ProtectedData } from '../components/ProtectedData';
 import './App.css'
 
 export function SuccessView({ currentUser, onLogout }) {

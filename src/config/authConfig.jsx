@@ -6,7 +6,10 @@ export const msalConfig = {
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID}`,
     redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI,
   },
-  cache: { cacheLocation: 'localStorage' },
+  cache: {
+    cacheLocation: 'localStorage',
+    storeAuthStateInCookie: true, // Mantiene el estado de la petición durante redirecciones o popups
+  },
   system: {
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {

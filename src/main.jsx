@@ -2,15 +2,26 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { PublicClientApplication, EventType } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
-import { msalConfig } from './authConfig';
+import { msalConfig } from './config/authConfig';
 import App from './App';
 import './index.css';
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
 async function main() {
-  // Inicialización requerida para MSAL Browser v3+
   await msalInstance.initialize();
+
+  try {
+    const redirectResponse = await msalInstance.handleRedirectPromise();
+    if (redirectResponse && redirectResponse.account) {
+      msalInstance.setActiveAccount(redirectResponse.account);
+    }
+  } catch (error) {
+    // Si hay un hash obsoleto en la URL, lo borramos automáticamente
+    if (window.location.hash.includes('code=')) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
 
   if (!msalInstance.getActiveAccount() && msalInstance.getAllAccounts().length > 0) {
     msalInstance.setActiveAccount(msalInstance.getAllAccounts()[0]);
@@ -32,4 +43,4 @@ async function main() {
   );
 }
 
-main().catch((err) => console.error("Error al inicializar MSAL:", err));
+main().catch((err) => console.error("Error en la inicialización:", err));

@@ -1,5 +1,5 @@
 import { useMsal } from '@azure/msal-react';
-import { apiRequest } from './authConfig';
+import { apiRequest } from '../config/authConfig';
 
 export function useApi() {
   const { instance, accounts } = useMsal();
