@@ -103,6 +103,15 @@ header, footer, main {
   width: 100%;
 }
 
+
+.btn__filter{
+  margin: auto;
+}
+
+.margin__flex{
+  display: flex;
+}
+
 /* --- HEADER --- */
 .header__nav {
   background: rgba(255, 255, 255, 0.85);

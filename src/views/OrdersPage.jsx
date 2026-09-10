@@ -169,10 +169,10 @@ export const OrdersPage = () => {
         <main>
         <UnauthenticatedTemplate>
             <h1>Autenticación Requerida</h1>
-            <div className="forms__box text-center">
-            <button type="button" className="btn__filter" onClick={handleLogin}>
-                Iniciar Sesión con Microsoft
-            </button>
+            <div className="forms__box text-center margin__flex">
+                <button type="button" className="btn__filter" onClick={handleLogin}>
+                    Iniciar Sesión con Microsoft
+                </button>
             </div>
         </UnauthenticatedTemplate>
 
