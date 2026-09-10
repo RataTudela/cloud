@@ -219,7 +219,7 @@ export const OrdersPage = () => {
                     type="button" 
                     className="btn__filter" 
                     onClick={handleAddItem}
-                    style={{ backgroundColor: 'rgba(225, 29, 72, 0.1);' }}
+                    style={{ backgroundColor: "rgba(225, 29, 72, 0.1)"}}
                     disabled={products.length === 0}
                     >
                     + Agregar Producto
@@ -259,7 +259,7 @@ export const OrdersPage = () => {
                     className="btn__filter" 
                     onClick={() => { fetchOrders(); fetchProducts(); }} 
                     disabled={loading}
-                    style={{ backgroundColor: 'rgba(225, 29, 72, 0.1);' }}>
+                    style={{ backgroundColor: "rgba(225, 29, 72, 0.1)"}}>
                     Recargar Lista
                 </button>
                 </div>
