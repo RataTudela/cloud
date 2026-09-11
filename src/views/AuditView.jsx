@@ -53,9 +53,10 @@ export function AuditView() {
           } catch (e) {
             status = '';
           }
+          const targetEvent = customFilters.evento.toLowerCase();
           return (
-            status.toLowerCase() === customFilters.evento.toLowerCase() ||
-            log.eventType?.toLowerCase().includes(customFilters.evento.toLowerCase())
+            status.toLowerCase() === targetEvent ||
+            log.eventType?.toLowerCase().includes(targetEvent)
           );
         });
       }
@@ -103,7 +104,6 @@ export function AuditView() {
                   onChange={handleChange}
                 />
               </div>
-
               <div className="filter__group">
                 <label>Rango de Fechas:</label>
                 <div className="date__range">
@@ -122,27 +122,24 @@ export function AuditView() {
                   />
                 </div>
               </div>
-
               <div className="filter__group">
                 <label htmlFor="evento">Estado del Pedido:</label>
                 <select id="evento" value={filters.evento} onChange={handleChange}>
-                  <option value="todo">Todos Los Eventos</option>
-                  <option value="CREADO">Orden Creada</option>
-                  <option value="ACEPTADO">Orden Aceptada</option>
-                  <option value="PREPARADO">Orden Preparada</option>
-                  <option value="ENVIADO">Orden Enviada</option>
-                  <option value="ENTREGADO">Orden Entregada</option>
-                  <option value="CANCELADO">Orden Cancelada</option>
+                  <option value="todo">Todos los Eventos</option>
+                  <option value="CREADO">CREADO</option>
+                  <option value="ACEPTADO">ACEPTADO</option>
+                  <option value="EN_PREPARACION">EN_PREPARACION</option>
+                  <option value="DESPACHADO">DESPACHADO</option>
+                  <option value="ENTREGADO">ENTREGADO</option>
+                  <option value="CANCELADO">CANCELADO</option>
                 </select>
               </div>
             </div>
-
             <button type="submit" className="btn__filter">
               Filtrar
             </button>
           </form>
         </div>
-
         {error && (
           <div className="alert-error">
             <i className="fa-solid fa-triangle-exclamation"></i> {error}
@@ -165,7 +162,6 @@ export function AuditView() {
                 } catch (e) {
                   parsedDetails = {};
                 }
-
                 return (
                   <div key={log.id} className="audit-card">
                     <div className="audit-card__header">
@@ -185,18 +181,15 @@ export function AuditView() {
                         {new Date(log.timestamp).toLocaleString()}
                       </span>
                     </div>
-
                     <div className="audit-card__body">
                       <p className="audit-card__text">
                         <strong>Realizado por:</strong> {log.actor || 'Sistema'}
                       </p>
-
                       {parsedDetails.description && (
                         <p className="audit-card__text--secondary">
                           <strong>Descripción:</strong> {parsedDetails.description}
                         </p>
                       )}
-
                       {parsedDetails.totalAmount && (
                         <p className="audit-card__text">
                           <strong>Monto Total:</strong> ${parsedDetails.totalAmount.toLocaleString('es-CL')}
