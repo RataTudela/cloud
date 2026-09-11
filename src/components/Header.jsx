@@ -1,7 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 
 export function Header() {
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const userName = accounts[0]?.name || accounts[0]?.username;
+
+  const handleLogin = () => {
+    instance.loginRedirect().catch((e) => console.error(e));
+  };
+
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: '/',
+    });
+  };
+
   return (
     <header>
       <nav className="header__nav">
@@ -10,6 +25,7 @@ export function Header() {
             <i className="fa-solid fa-shopping-cart carrito-rojo"></i>
           </div>
         </div>
+
         <ul className="nav__list">
           <li className="list__items">
             <Link to="/dashboard" className="item__link">Home</Link>
@@ -21,6 +37,22 @@ export function Header() {
             <Link to="/audit" className="item__link">Auditoría</Link>
           </li>
         </ul>
+
+        {/* Sección de Autenticación */}
+        <div className="nav__auth">
+          {isAuthenticated ? (
+            <div className="auth__user">
+              <span className="user__name">{userName}</span>
+              <button onClick={handleLogout} className="btn-logout" title="Cerrar sesión">
+                <i className="fa-solid fa-right-from-bracket"></i> Salir
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleLogin} className="btn-login">
+              <i className="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+            </button>
+          )}
+        </div>
       </nav>
     </header>
   );

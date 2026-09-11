@@ -19,24 +19,16 @@ export function AuditView() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (customFilters.usuario) params.append('actor', customFilters.usuario);
-      let url = '/api/audit';
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const res = await fetchWithToken(url);
-
+      const res = await fetchWithToken('/api/audit');
       if (!res.ok) {
         throw new Error(`Error en el servidor: ${res.status} ${res.statusText}`);
       }
-
       let data = await res.json();
 
-      if (customFilters.evento !== 'todo') {
+      if (customFilters.usuario.trim()) {
+        const termino = customFilters.usuario.trim().toLowerCase();
         data = data.filter((log) =>
-          log.eventType?.toLowerCase().includes(customFilters.evento.toLowerCase())
+          log.actor?.toLowerCase().includes(termino)
         );
       }
 
@@ -52,6 +44,21 @@ export function AuditView() {
         data = data.filter((log) => new Date(log.timestamp) <= fechaHasta);
       }
 
+      if (customFilters.evento !== 'todo') {
+        data = data.filter((log) => {
+          let status = '';
+          try {
+            const detailsObj = JSON.parse(log.details || '{}');
+            status = detailsObj.status || '';
+          } catch (e) {
+            status = '';
+          }
+          return (
+            status.toLowerCase() === customFilters.evento.toLowerCase() ||
+            log.eventType?.toLowerCase().includes(customFilters.evento.toLowerCase())
+          );
+        });
+      }
       setLogs(data);
     } catch (err) {
       console.error('Error al obtener registros de auditoría:', err);
@@ -78,11 +85,11 @@ export function AuditView() {
   };
 
   return (
-    <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem' }}>
+    <main>
       <AuthenticatedTemplate>
-        <h1>Timeline de Auditoría</h1>
-
-        {/* Formulario de Filtros */}
+        <div className="h1__fondo">
+          <h1>Timeline de Auditoría</h1>
+        </div>
         <div className="forms__box">
           <form onSubmit={handleSubmit}>
             <div className="inputs__row">
@@ -117,15 +124,15 @@ export function AuditView() {
               </div>
 
               <div className="filter__group">
-                <label htmlFor="evento">Tipo de Evento:</label>
+                <label htmlFor="evento">Estado del Pedido:</label>
                 <select id="evento" value={filters.evento} onChange={handleChange}>
                   <option value="todo">Todos Los Eventos</option>
-                  <option value="ordenCreate">Orden Creada</option>
-                  <option value="ordenAccepted">Orden Aceptada</option>
-                  <option value="ordenPrepared">Orden Preparada</option>
-                  <option value="ordenDispatched">Orden Enviada</option>
-                  <option value="ordenDelivery">Orden Entregada</option>
-                  <option value="ordenDelete">Orden Eliminada / Cancelada</option>
+                  <option value="CREADO">Orden Creada</option>
+                  <option value="ACEPTADO">Orden Aceptada</option>
+                  <option value="PREPARADO">Orden Preparada</option>
+                  <option value="ENVIADO">Orden Enviada</option>
+                  <option value="ENTREGADO">Orden Entregada</option>
+                  <option value="CANCELADO">Orden Cancelada</option>
                 </select>
               </div>
             </div>
@@ -137,105 +144,78 @@ export function AuditView() {
         </div>
 
         {error && (
-          <div
-            style={{
-              marginTop: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#fee2e2',
-              color: '#991b1b',
-              borderRadius: '6px'
-            }}
-          >
-            ❌ {error}
+          <div className="alert-error">
+            <i className="fa-solid fa-triangle-exclamation"></i> {error}
           </div>
         )}
 
-        {/* Timeline de Eventos */}
-        <section style={{ marginTop: '2rem' }}>
+        <section className="audit-container">
           {loading ? (
-            <p>Cargando eventos de auditoría...</p>
+            <p className="audit-empty">Cargando eventos de auditoría...</p>
           ) : logs.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '2rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px dashed #cbd5e1',
-                color: '#64748b'
-              }}
-            >
+            <div className="forms__box audit-empty">
               No se encontraron registros de auditoría para los filtros aplicados.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  style={{
-                    borderLeft: '4px solid #2563eb',
-                    padding: '1rem',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '0 8px 8px 0',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                    borderTop: '1px solid #e2e8f0',
-                    borderRight: '1px solid #e2e8f0',
-                    borderBottom: '1px solid #e2e8f0'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '0.5rem'
-                    }}
-                  >
-                    <span style={{ fontWeight: 'bold', fontSize: '1rem', color: '#1e293b' }}>
-                      ⚡ {log.eventType} {log.orderId ? `- Pedido: #${log.orderId}` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                      {new Date(log.timestamp).toLocaleString()}
-                    </span>
+            <div className="audit-list">
+              {logs.map((log) => {
+                let parsedDetails = {};
+                try {
+                  parsedDetails = JSON.parse(log.details || '{}');
+                } catch (e) {
+                  parsedDetails = {};
+                }
+
+                return (
+                  <div key={log.id} className="audit-card">
+                    <div className="audit-card__header">
+                      <div className="audit-card__title-group">
+                        <i className="fa-solid fa-bolt audit-card__icon"></i>
+                        <span className="audit-card__title">
+                          {log.orderId ? `Pedido #${log.orderId}` : 'Evento de Sistema'}
+                        </span>
+                        {parsedDetails.status && (
+                          <span className="audit-card__badge">
+                            {parsedDetails.status}
+                          </span>
+                        )}
+                      </div>
+                      <span className="audit-card__date">
+                        <i className="fa-regular fa-clock"></i>{' '}
+                        {new Date(log.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="audit-card__body">
+                      <p className="audit-card__text">
+                        <strong>Realizado por:</strong> {log.actor || 'Sistema'}
+                      </p>
+
+                      {parsedDetails.description && (
+                        <p className="audit-card__text--secondary">
+                          <strong>Descripción:</strong> {parsedDetails.description}
+                        </p>
+                      )}
+
+                      {parsedDetails.totalAmount && (
+                        <p className="audit-card__text">
+                          <strong>Monto Total:</strong> ${parsedDetails.totalAmount.toLocaleString('es-CL')}
+                        </p>
+                      )}
+                    </div>
                   </div>
-
-                  <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#475569' }}>
-                    <strong>Realizado por:</strong> {log.actor || 'Sistema'}
-                  </p>
-
-                  {log.details && (
-                    <details style={{ marginTop: '0.5rem' }}>
-                      <summary
-                        style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#2563eb' }}
-                      >
-                        Ver payload del evento (JSON)
-                      </summary>
-                      <pre
-                        style={{
-                          backgroundColor: '#0f172a',
-                          color: '#38bdf8',
-                          padding: '0.75rem',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                          overflowX: 'auto',
-                          marginTop: '0.5rem'
-                        }}
-                      >
-                        {JSON.stringify(JSON.parse(log.details || '{}'), null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </AuthenticatedTemplate>
-
       <UnauthenticatedTemplate>
-        <p style={{ textAlign: 'center', marginTop: '2rem', color: '#dc2626' }}>
-          ⚠️ Acceso denegado. Debes iniciar sesión con Azure AD para consultar la auditoría.
-        </p>
+        <div className="forms__box alert-denied">
+          <p>
+            <i className="fa-solid fa-lock"></i> Acceso denegado. Debes iniciar sesión con Azure AD para consultar la auditoría.
+          </p>
+        </div>
       </UnauthenticatedTemplate>
     </main>
   );
