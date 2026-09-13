@@ -7,7 +7,27 @@ export function Header() {
   const isAuthenticated = useIsAuthenticated();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const userName = accounts[0]?.name || accounts[0]?.username;
+  const account = accounts[0];
+  const userName = account?.name || account?.username;
+
+  // Detección de roles desde MSAL
+  const rawRoles = account?.idTokenClaims?.roles 
+    || account?.idTokenClaims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
+    || [];
+  const userRoles = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
+
+  const isAdmin = userRoles.some(role => 
+    ['admin', 'administrator', 'administrador'].includes(String(role).toLowerCase())
+  );
+  const isOperator = userRoles.some(role => 
+    ['operator', 'operador'].includes(String(role).toLowerCase())
+  );
+  const isCustomer = userRoles.some(role => 
+    ['customer', 'cliente'].includes(String(role).toLowerCase())
+  ) || (!isAdmin && !isOperator);
+
+  // Etiquetas de rol en español
+  const roleLabel = isAdmin ? 'Administrador' : isOperator ? 'Operador' : 'Cliente';
 
   const handleLogin = () => {
     instance.loginRedirect().catch((e) => console.error(e));
@@ -50,20 +70,29 @@ export function Header() {
                 Pedidos
               </Link>
             </li>
-            <li className="list__items">
-              <Link to="/audit" className="item__link" onClick={() => setMenuOpen(false)}>
-                Auditoría
-              </Link>
-            </li>
+
+            {/* Solo visible para Administrador (u Operador si se requiere) */}
+            {isAdmin && (
+              <li className="list__items">
+                <Link to="/audit" className="item__link" onClick={() => setMenuOpen(false)}>
+                  Auditoría
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Sección de Autenticación */}
           <div className="nav__auth">
             {isAuthenticated ? (
               <div className="auth__user">
-                <span className="user__name" title={userName}>
-                  {userName}
-                </span>
+                <div className="user__info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span className="user__name" title={userName}>
+                    {userName}
+                  </span>
+                  <span className="user__role badge bg-secondary" style={{ fontSize: '0.75rem' }}>
+                    {roleLabel}
+                  </span>
+                </div>
                 <button onClick={handleLogout} className="btn-logout" title="Cerrar sesión">
                   <i className="fa-solid fa-right-from-bracket"></i> Salir
                 </button>

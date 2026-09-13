@@ -1,34 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
 import { Link } from 'react-router-dom';
+import { useApi } from '../hooks/useApi';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 export function HomeView() {
     const { accounts } = useMsal();
     const account = accounts[0];
     const userName = account?.name || account?.username || 'Usuario';
-    console.log("Claims recibidos de Azure:", account?.idTokenClaims);
-    // Extraer roles desde las posibles propiedades del ID Token
+    const { fetchWithToken } = useApi();
+
     const rawRoles = account?.idTokenClaims?.roles 
         || account?.idTokenClaims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
         || [];
-
     const userRoles = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
 
-    // Validación flexible e insensible a mayúsculas
     const isAdmin = userRoles.some(role => 
         ['admin', 'administrator', 'administrador'].includes(String(role).toLowerCase())
     );
-    
     const isOperator = userRoles.some(role => 
         ['operator', 'operador'].includes(String(role).toLowerCase())
     );
-    
     const isCustomer = userRoles.some(role => 
         ['customer', 'cliente'].includes(String(role).toLowerCase())
     ) || (!isAdmin && !isOperator);
 
-    // Etiqueta legible para mostrar en la interfaz
     const roleLabel = isAdmin ? 'Administrador' : isOperator ? 'Operador' : 'Cliente';
+    
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (accounts.length > 0) {
+            loadDashboardData();
+        }
+    }, [accounts]);
+
+    const loadDashboardData = async () => {
+        setLoading(true);
+        try {
+            const resOrders = await fetchWithToken(`${API_BASE}/api/orders`);
+            if (resOrders.ok) {
+                const ordersData = await resOrders.json();
+                setOrders(Array.isArray(ordersData) ? ordersData : [ordersData]);
+            }
+        } catch (error) {
+            console.error('Error al cargar datos del Dashboard:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const totalSales = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalOrdersCount = orders.length;
+    const activeUsersCount = new Set(orders.map(o => o.customer).filter(Boolean)).size;
+
+    const pendingOrders = orders.filter(o => o.status === 'CREADO');
+    const inProgressOrders = orders.filter(o => ['ACEPTADO', 'EN_PREPARACION'].includes(o.status));
+
+    const myOrders = orders.filter(o => o.customer === userName || o.customer === account?.username);
+    const recentMyOrders = [...myOrders].reverse().slice(0, 3);
 
     return (
         <main className="home-container">
@@ -36,7 +69,7 @@ export function HomeView() {
                 <div className="h1__fondo">
                     <h1>Dashboard Principal</h1>
                 </div>
-            
+
                 <section className="hero-card">
                     <div className="hero-badge">
                         <i className="fa-solid fa-circle-check"></i>
@@ -44,76 +77,103 @@ export function HomeView() {
                     </div>
                     <h2 className="hero-title">¡Bienvenido, {userName}!</h2>
                     <p className="hero-description">
-                        Rol detectado: <strong>{roleLabel}</strong>
+                        Rol activo: <strong>{roleLabel}</strong>
                     </p>
                 </section>
 
                 <section className="role-summary-section">
+                    {/* VISTA ADMIN */}
                     {isAdmin && (
                         <div className="summary-block">
-                            <h3 className="section-title">Resumen de KPIs (Global)</h3>
-                            <div className="modules-grid">
-                                <article className="module-card">
-                                    <span className="module-tag">Ventas</span>
-                                    <h4 className="module-title">$1,250,000</h4>
-                                    <p className="module-text">Total acumulado hoy</p>
-                                </article>
-                                <article className="module-card">
-                                    <span className="module-tag">Pedidos</span>
-                                    <h4 className="module-title">48</h4>
-                                    <p className="module-text">Órdenes procesadas hoy</p>
-                                </article>
-                                <article className="module-card">
-                                    <span className="module-tag">Usuarios</span>
-                                    <h4 className="module-title">12</h4>
-                                    <p className="module-text">Sesiones activas</p>
-                                </article>
-                            </div>
+                            <h3 className="section-title">Resumen Global (KPIs Admin)</h3>
+                            {loading ? (
+                                <p className="text-muted">Cargando métricas...</p>
+                            ) : (
+                                <div className="modules-grid">
+                                    <article className="module-card">
+                                        <span className="module-tag">Ventas Totales</span>
+                                        <h4 className="module-title">${totalSales.toLocaleString('es-CL')}</h4>
+                                        <p className="module-text">Monto global acumulado</p>
+                                    </article>
+                                    <article className="module-card">
+                                        <span className="module-tag">Pedidos Totales</span>
+                                        <h4 className="module-title">{totalOrdersCount}</h4>
+                                        <p className="module-text">Órdenes procesadas</p>
+                                    </article>
+                                    <article className="module-card">
+                                        <span className="module-tag">Usuarios Activos</span>
+                                        <h4 className="module-title">{activeUsersCount}</h4>
+                                        <p className="module-text">Clientes con actividad</p>
+                                    </article>
+                                </div>
+                            )}
                         </div>
                     )}
 
+                    {/* VISTA OPERATOR */}
                     {isOperator && (
                         <div className="summary-block">
-                            <h3 className="section-title">Pedidos en Cuestión</h3>
-                            <div className="modules-grid">
-                                <article className="module-card">
-                                    <span className="module-tag">Pendientes</span>
-                                    <h4 className="module-title">5 Pedidos</h4>
-                                    <p className="module-text">Esperando pasar a ACEPTADO</p>
-                                    <Link to="/orders" className="module-link">Atender órdenes <i className="fa-solid fa-arrow-right"></i></Link>
-                                </article>
-                                <article className="module-card">
-                                    <span className="module-tag">En Preparación</span>
-                                    <h4 className="module-title">8 Pedidos</h4>
-                                    <p className="module-text">Listos para despachar</p>
-                                    <Link to="/orders" className="module-link">Ver cocina/despacho <i className="fa-solid fa-arrow-right"></i></Link>
-                                </article>
-                            </div>
+                            <h3 className="section-title">Resumen de Actividad (Operator)</h3>
+                            {loading ? (
+                                <p className="text-muted">Cargando pedidos en curso...</p>
+                            ) : (
+                                <div className="modules-grid">
+                                    <article className="module-card">
+                                        <span className="module-tag">Pedidos Pendientes</span>
+                                        <h4 className="module-title">{pendingOrders.length}</h4>
+                                        <p className="module-text">Estado CREADO</p>
+                                        <Link to="/orders" className="module-link">Ver lista <i className="fa-solid fa-arrow-right"></i></Link>
+                                    </article>
+                                    <article className="module-card">
+                                        <span className="module-tag">Pedidos en Curso</span>
+                                        <h4 className="module-title">{inProgressOrders.length}</h4>
+                                        <p className="module-text">En preparación / Aceptados</p>
+                                        <Link to="/orders" className="module-link">Ver lista <i className="fa-solid fa-arrow-right"></i></Link>
+                                    </article>
+                                </div>
+                            )}
                         </div>
                     )}
 
+                    {/* VISTA CUSTOMER */}
                     {isCustomer && (
                         <div className="summary-block">
-                            <h3 className="section-title">Mis Últimos Pedidos</h3>
-                            <div className="modules-grid">
-                                <article className="module-card">
-                                    <span className="module-tag">Pedido #1024</span>
-                                    <h4 className="module-title">Estado: DESPACHADO</h4>
-                                    <p className="module-text">Su pedido va en camino</p>
-                                    <Link to="/orders" className="module-link">Ver detalles <i className="fa-solid fa-arrow-right"></i></Link>
-                                </article>
-                                <article className="module-card">
-                                    <span className="module-tag">Acción</span>
-                                    <h4 className="module-title">¿Deseas comprar algo más?</h4>
-                                    <p className="module-text">Crea un nuevo pedido rápidamente</p>
-                                    <Link to="/orders" className="module-link">Crear pedido <i className="fa-solid fa-plus"></i></Link>
-                                </article>
-                            </div>
+                            <h3 className="section-title">Resumen de Actividad (Customer)</h3>
+                            {loading ? (
+                                <p className="text-muted">Cargando tus pedidos...</p>
+                            ) : (
+                                <>
+                                    <h4 className="section-title" style={{ fontSize: '1rem', marginBottom: '1rem' }}>
+                                        Últimos Pedidos y Estado Actual
+                                    </h4>
+                                    {recentMyOrders.length === 0 ? (
+                                        <div className="module-card">
+                                            <p className="module-text">No registras pedidos recientes.</p>
+                                            <Link to="/orders" className="module-link">Crear Pedido <i className="fa-solid fa-plus"></i></Link>
+                                        </div>
+                                    ) : (
+                                        <div className="modules-grid">
+                                            {recentMyOrders.map(order => (
+                                                <article key={order.id} className="module-card">
+                                                    <span className="module-tag">Orden #{order.id}</span>
+                                                    <h4 className="module-title" style={{ fontSize: '1.2rem' }}>
+                                                        Estado: {order.status}
+                                                    </h4>
+                                                    <p className="module-text">
+                                                        Total: ${order.totalAmount?.toLocaleString('es-CL')}
+                                                    </p>
+                                                    <Link to="/orders" className="module-link">Detalles <i className="fa-solid fa-arrow-right"></i></Link>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
                 </section>
 
-                {/* Acceso Rápido a Módulos */}
+                {/* NAVEGACIÓN DIRECTA */}
                 <section className="modules-section">
                     <h3 className="section-title">Navegación Directa</h3>
                     <div className="modules-grid">
@@ -121,14 +181,15 @@ export function HomeView() {
                             <h4 className="module-title">Órdenes y Pedidos</h4>
                             <Link to="/orders" className="module-link">Ir a Pedidos <i className="fa-solid fa-arrow-right"></i></Link>
                         </article>
-                        <article className="module-card">
-                            <h4 className="module-title">Timeline de Auditoría</h4>
-                            <Link to="/audit" className="module-link">Ir a Auditoría <i className="fa-solid fa-arrow-right"></i></Link>
-                        </article>
+                        {isAdmin && (
+                            <article className="module-card">
+                                <h4 className="module-title">Timeline de Auditoría</h4>
+                                <Link to="/audit" className="module-link">Ir a Auditoría <i className="fa-solid fa-arrow-right"></i></Link>
+                            </article>
+                        )}
                     </div>
                 </section>
             </AuthenticatedTemplate>
-
             <UnauthenticatedTemplate>
                 <div className="h1__fondo">
                     <h1>Pedidos360</h1>
