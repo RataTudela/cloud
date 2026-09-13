@@ -6,6 +6,7 @@ import { Footer } from './components/Footer';
 import { HomeView } from './views/HomeView';
 import { AuditView } from './views/AuditView';
 import { OrdersPage } from './views/OrdersPage';
+import { CatalogPage } from './views/CatalogPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/audit" element={<AuditView />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/catalog" element={<CatalogPage />} />
           </Routes>
         </main>
         <Footer />
