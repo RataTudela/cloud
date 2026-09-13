@@ -12,8 +12,6 @@ export const OrdersPage = () => {
     const { instance, accounts, inProgress } = useMsal();
     const { fetchWithToken } = useApi();
     const account = accounts[0];
-
-    // Detección de roles MSAL
     const rawRoles = account?.idTokenClaims?.roles 
         || account?.idTokenClaims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
         || [];
@@ -187,9 +185,19 @@ export const OrdersPage = () => {
         }
     };
 
-    const filteredOrders = orders.filter((o) => 
-        statusFilter === 'todos' ? true : o.status === statusFilter
-    );
+    const currentUser = account?.name || account?.username || '';
+
+    const filteredOrders = orders.filter((o) => {
+        const matchesCustomer = isCustomer 
+            ? o.customer?.toLowerCase() === currentUser.toLowerCase() 
+            : true;
+
+        const matchesStatus = statusFilter === 'todos' 
+            ? true 
+            : o.status === statusFilter;
+
+        return matchesCustomer && matchesStatus;
+    });
 
     return (
         <main>
