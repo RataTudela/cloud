@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     AuthenticatedTemplate,
     UnauthenticatedTemplate,
     useMsal
 } from '@azure/msal-react';
-import { InteractionStatus } from '@azure/msal-browser';
+
 import { loginRequest } from '../config/authConfig';
 import { useApi } from '../hooks/useApi';
-
-// ============================================================
-// CONFIGURACIÓN API
-// ============================================================
 
 const API_BASE =
     import.meta.env.VITE_CATALOG_API_BASE_URL ||
@@ -19,17 +15,33 @@ const API_BASE =
 const PRODUCTS_API_URL =
     `${API_BASE}/api/catalog/productos`;
 
+export function CatalogPage() {
 
-export const CatalogPage = () => {
-
-    const { instance, accounts, inProgress } = useMsal();
+    const { instance, accounts } = useMsal();
     const { fetchWithToken } = useApi();
 
-    const account = accounts[0];
+    const [products, setProducts] = useState([]);
 
-    // ============================================================
-    // ROLES MSAL
-    // ============================================================
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const [productId, setProductId] = useState('');
+    const [productName, setProductName] = useState('');
+    const [productPrice, setProductPrice] = useState('');
+    const [productStock, setProductStock] = useState('');
+
+    const [editingId, setEditingId] = useState(null);
+
+    /*
+     * ============================
+     * ROLES
+     * ============================
+     */
+
+    const account = accounts[0] || instance.getActiveAccount();
 
     const rawRoles =
         account?.idTokenClaims?.roles ||
@@ -57,50 +69,75 @@ export const CatalogPage = () => {
             .includes(String(role).toLowerCase())
     ) || (!isAdmin && !isOperator);
 
-
-    // ============================================================
-    // PERMISOS
-    // ============================================================
-
-    // Administrador: CRUD completo
     const canCreate = isAdmin;
     const canEdit = isAdmin;
     const canDelete = isAdmin;
-
-    // Administrador y operador pueden modificar stock
     const canUpdateStock = isAdmin || isOperator;
 
+    /*
+     * ============================
+     * LOGIN
+     * ============================
+     */
 
-    // ============================================================
-    // ESTADOS
-    // ============================================================
+    const handleLogin = async () => {
+        try {
+            await instance.loginRedirect(loginRequest);
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error);
+            setErrorMsg('No fue posible iniciar sesión.');
+        }
+    };
 
-    const [products, setProducts] = useState([]);
+    /*
+     * ============================
+     * OBTENER PRODUCTOS
+     * ============================
+     */
 
-    const [loading, setLoading] = useState(false);
+    const fetchProducts = async () => {
 
-    const [errorMsg, setErrorMsg] = useState('');
-    const [successMsg, setSuccessMsg] = useState('');
+        setLoading(true);
+        setErrorMsg('');
 
-    const [searchTerm, setSearchTerm] = useState('');
+        try {
 
+            const response = await fetchWithToken(
+                PRODUCTS_API_URL
+            );
 
-    // ============================================================
-    // FORMULARIO
-    // ============================================================
+            if (!response.ok) {
+                throw new Error(
+                    `Error HTTP ${response.status}`
+                );
+            }
 
-    const [productId, setProductId] = useState('');
-    const [productName, setProductName] = useState('');
-    const [productPrice, setProductPrice] = useState('');
-    const [productStock, setProductStock] = useState('');
+            const data = await response.json();
 
-    // ID del producto que estamos editando
-    const [editingId, setEditingId] = useState(null);
+            setProducts(data);
 
+        } catch (error) {
 
-    // ============================================================
-    // CARGA INICIAL
-    // ============================================================
+            console.error(
+                'Error al consultar productos:',
+                error
+            );
+
+            setErrorMsg(
+                'No fue posible cargar los productos.'
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    /*
+     * ============================
+     * CARGAR AL INICIAR
+     * ============================
+     */
 
     useEffect(() => {
 
@@ -110,147 +147,34 @@ export const CatalogPage = () => {
 
     }, [accounts]);
 
+    /*
+     * ============================
+     * LIMPIAR FORMULARIO
+     * ============================
+     */
 
-    // ============================================================
-    // LOGIN
-    // ============================================================
-
-    const handleLogin = () => {
-
-        if (inProgress === InteractionStatus.None) {
-
-            instance
-                .loginRedirect(loginRequest)
-                .catch((e) => console.error(e));
-
-        }
-
-    };
-
-
-    // ============================================================
-    // LISTAR PRODUCTOS
-    // GET /api/catalog/productos
-    // ============================================================
-
-    const fetchProducts = async () => {
-
-        setLoading(true);
-        setErrorMsg('');
-
-        try {
-
-            const response =
-                await fetchWithToken(PRODUCTS_API_URL);
-
-            if (response.ok) {
-
-                const data = await response.json();
-
-                setProducts(
-                    Array.isArray(data)
-                        ? data
-                        : [data]
-                );
-
-            } else {
-
-                setErrorMsg(
-                    `Error ${response.status}: No se pudieron obtener los productos.`
-                );
-
-            }
-
-        } catch (err) {
-
-            console.error(
-                'Error al consultar productos:',
-                err
-            );
-
-            setErrorMsg(
-                'Error de conexión o autenticación al consultar el catálogo.'
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-    };
-
-
-    // ============================================================
-    // LIMPIAR FORMULARIO
-    // ============================================================
-
-    const resetForm = () => {
+    const clearForm = () => {
 
         setProductId('');
         setProductName('');
         setProductPrice('');
         setProductStock('');
-
         setEditingId(null);
-
     };
 
+    /*
+     * ============================
+     * CREAR PRODUCTO
+     * ============================
+     */
 
-    // ============================================================
-    // CREAR PRODUCTO
-    // POST /api/catalog/productos
-    // ============================================================
+    const handleCreateProduct = async (event) => {
 
-    const handleCreateProduct = async (e) => {
-
-        e.preventDefault();
-
-        setErrorMsg('');
-        setSuccessMsg('');
-
-
-        // Validaciones
-
-        if (
-            !productId.trim() ||
-            !productName.trim() ||
-            productPrice === '' ||
-            productStock === ''
-        ) {
-
-            setErrorMsg(
-                'Debes completar todos los campos del producto.'
-            );
-
-            return;
-
-        }
-
-
-        if (Number(productPrice) < 0) {
-
-            setErrorMsg(
-                'El precio no puede ser negativo.'
-            );
-
-            return;
-
-        }
-
-
-        if (Number(productStock) < 0) {
-
-            setErrorMsg(
-                'El stock no puede ser negativo.'
-            );
-
-            return;
-
-        }
-
+        event.preventDefault();
 
         setLoading(true);
+        setErrorMsg('');
+        setSuccessMsg('');
 
         try {
 
@@ -258,138 +182,89 @@ export const CatalogPage = () => {
                 PRODUCTS_API_URL,
                 {
                     method: 'POST',
-
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-
                     body: JSON.stringify({
-                        id: productId.trim(),
-                        name: productName.trim(),
+                        id: productId,
+                        name: productName,
                         price: Number(productPrice),
                         stock: Number(productStock)
                     })
                 }
             );
 
-
-            if (response.ok) {
-
-                setSuccessMsg(
-                    `Producto "${productName}" creado exitosamente.`
-                );
-
-                resetForm();
-
-                await fetchProducts();
-
-            } else {
+            if (!response.ok) {
 
                 const errorText =
                     await response.text();
 
-                setErrorMsg(
+                throw new Error(
                     errorText ||
-                    `No se pudo crear el producto (HTTP ${response.status}).`
+                    `Error HTTP ${response.status}`
                 );
-
             }
 
-        } catch (err) {
+            await response.json();
+
+            setSuccessMsg(
+                'Producto creado correctamente.'
+            );
+
+            clearForm();
+
+            await fetchProducts();
+
+        } catch (error) {
 
             console.error(
                 'Error al crear producto:',
-                err
+                error
             );
 
             setErrorMsg(
-                'Error al conectar con el microservicio de catálogo.'
+                'No fue posible crear el producto.'
             );
 
         } finally {
 
             setLoading(false);
-
         }
-
     };
 
+    /*
+     * ============================
+     * PREPARAR EDICIÓN
+     * ============================
+     */
 
-    // ============================================================
-    // PREPARAR EDICIÓN
-    // ============================================================
-
-    const handleEditClick = (product) => {
+    const handleEditProduct = (product) => {
 
         setEditingId(product.id);
 
         setProductId(product.id);
-        setProductName(product.name || '');
-        setProductPrice(product.price ?? '');
-        setProductStock(product.stock ?? '');
+        setProductName(product.name);
+        setProductPrice(product.price);
+        setProductStock(product.stock);
 
         setErrorMsg('');
         setSuccessMsg('');
-
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-
     };
 
+    /*
+     * ============================
+     * ACTUALIZAR PRODUCTO
+     * ============================
+     */
 
-    // ============================================================
-    // ACTUALIZAR PRODUCTO
-    // PUT /api/catalog/productos/{id}
-    // ============================================================
+    const handleUpdateProduct = async (event) => {
 
-    const handleUpdateProduct = async (e) => {
+        event.preventDefault();
 
-        e.preventDefault();
-
-        setErrorMsg('');
-        setSuccessMsg('');
-
-
-        if (
-            !productName.trim() ||
-            productPrice === '' ||
-            productStock === ''
-        ) {
-
-            setErrorMsg(
-                'Debes completar todos los campos del producto.'
-            );
-
+        if (!editingId) {
             return;
-
         }
-
-
-        if (Number(productPrice) < 0) {
-
-            setErrorMsg(
-                'El precio no puede ser negativo.'
-            );
-
-            return;
-
-        }
-
-
-        if (Number(productStock) < 0) {
-
-            setErrorMsg(
-                'El stock no puede ser negativo.'
-            );
-
-            return;
-
-        }
-
 
         setLoading(true);
+        setErrorMsg('');
+        setSuccessMsg('');
 
         try {
 
@@ -397,84 +272,75 @@ export const CatalogPage = () => {
                 `${PRODUCTS_API_URL}/${editingId}`,
                 {
                     method: 'PUT',
-
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-
                     body: JSON.stringify({
                         id: productId,
-                        name: productName.trim(),
+                        name: productName,
                         price: Number(productPrice),
                         stock: Number(productStock)
                     })
                 }
             );
 
-
-            if (response.ok) {
-
-                setSuccessMsg(
-                    `Producto "${productId}" actualizado exitosamente.`
-                );
-
-                resetForm();
-
-                await fetchProducts();
-
-            } else {
+            if (!response.ok) {
 
                 const errorText =
                     await response.text();
 
-                setErrorMsg(
+                throw new Error(
                     errorText ||
-                    `No se pudo actualizar el producto (HTTP ${response.status}).`
+                    `Error HTTP ${response.status}`
                 );
-
             }
 
-        } catch (err) {
+            await response.json();
+
+            setSuccessMsg(
+                'Producto actualizado correctamente.'
+            );
+
+            clearForm();
+
+            await fetchProducts();
+
+        } catch (error) {
 
             console.error(
                 'Error al actualizar producto:',
-                err
+                error
             );
 
             setErrorMsg(
-                'Error al actualizar el producto.'
+                'No fue posible actualizar el producto.'
             );
 
         } finally {
 
             setLoading(false);
-
         }
-
     };
 
+    /*
+     * ============================
+     * ELIMINAR PRODUCTO
+     * ============================
+     */
 
-    // ============================================================
-    // ELIMINAR PRODUCTO
-    // DELETE /api/catalog/productos/{id}
-    // ============================================================
-
-    const handleDeleteProduct = async (id, name) => {
+    const handleDeleteProduct = async (
+        id,
+        name
+    ) => {
 
         const confirmed = window.confirm(
-            `¿Estás seguro de eliminar el producto "${name}"?`
+            `¿Está seguro de eliminar el producto "${name}"?`
         );
-
 
         if (!confirmed) {
             return;
         }
 
-
         setLoading(true);
         setErrorMsg('');
         setSuccessMsg('');
-
 
         try {
 
@@ -485,789 +351,594 @@ export const CatalogPage = () => {
                 }
             );
 
-
-            if (response.ok) {
-
-                setSuccessMsg(
-                    `Producto "${name}" eliminado exitosamente.`
-                );
-
-                await fetchProducts();
-
-            } else {
+            if (!response.ok) {
 
                 const errorText =
                     await response.text();
 
-                setErrorMsg(
+                throw new Error(
                     errorText ||
-                    `No se pudo eliminar el producto (HTTP ${response.status}).`
+                    `Error HTTP ${response.status}`
                 );
-
             }
 
-        } catch (err) {
+            setSuccessMsg(
+                'Producto eliminado correctamente.'
+            );
+
+            await fetchProducts();
+
+        } catch (error) {
 
             console.error(
                 'Error al eliminar producto:',
-                err
+                error
             );
 
             setErrorMsg(
-                'Error al eliminar el producto.'
+                'No fue posible eliminar el producto.'
             );
 
         } finally {
 
             setLoading(false);
-
         }
-
     };
 
+    /*
+     * ============================
+     * ACTUALIZAR STOCK
+     * ============================
+     */
 
-    // ============================================================
-    // ACTUALIZAR STOCK
-    // PATCH /api/catalog/productos/{id}/stock?stock=X
-    // ============================================================
-
-    const handleUpdateStock = async (product) => {
+    const handleUpdateStock = async (
+        product
+    ) => {
 
         const newStock = window.prompt(
             `Ingrese el nuevo stock para "${product.name}":`,
             product.stock
         );
 
-
-        // Cancelar
         if (newStock === null) {
             return;
         }
 
-
-        // Validación
+        const stockNumber = Number(newStock);
 
         if (
-            newStock.trim() === '' ||
-            Number.isNaN(Number(newStock)) ||
-            Number(newStock) < 0 ||
-            !Number.isInteger(Number(newStock))
+            !Number.isInteger(stockNumber) ||
+            stockNumber < 0
         ) {
 
             setErrorMsg(
-                'Debes ingresar un stock válido. El valor debe ser un número entero mayor o igual a 0.'
+                'El stock debe ser un número entero mayor o igual a 0.'
             );
 
             return;
-
         }
-
 
         setLoading(true);
         setErrorMsg('');
         setSuccessMsg('');
 
-
         try {
 
             const response = await fetchWithToken(
-                `${PRODUCTS_API_URL}/${product.id}/stock?stock=${Number(newStock)}`,
+                `${PRODUCTS_API_URL}/${product.id}/stock?stock=${stockNumber}`,
                 {
                     method: 'PATCH'
                 }
             );
 
-
-            if (response.ok) {
-
-                setSuccessMsg(
-                    `Stock de "${product.name}" actualizado a ${Number(newStock)} unidades.`
-                );
-
-                await fetchProducts();
-
-            } else {
+            if (!response.ok) {
 
                 const errorText =
                     await response.text();
 
-                setErrorMsg(
+                throw new Error(
                     errorText ||
-                    `No se pudo actualizar el stock (HTTP ${response.status}).`
+                    `Error HTTP ${response.status}`
                 );
-
             }
 
-        } catch (err) {
+            await response.json();
+
+            setSuccessMsg(
+                'Stock actualizado correctamente.'
+            );
+
+            await fetchProducts();
+
+        } catch (error) {
 
             console.error(
                 'Error al actualizar stock:',
-                err
+                error
             );
 
             setErrorMsg(
-                'Error al actualizar el stock.'
+                'No fue posible actualizar el stock.'
             );
 
         } finally {
 
             setLoading(false);
-
         }
-
     };
 
+    /*
+     * ============================
+     * FILTRO
+     * ============================
+     */
 
-    // ============================================================
-    // BUSCADOR
-    // ============================================================
-
-    const filteredProducts = products.filter((product) => {
-
-        const search =
-            searchTerm
-                .toLowerCase()
-                .trim();
-
-
-        if (!search) {
-            return true;
-        }
-
-
-        return (
+    const filteredProducts = products.filter(
+        product =>
             String(product.id)
                 .toLowerCase()
-                .includes(search)
-            ||
+                .includes(searchTerm.toLowerCase()) ||
             String(product.name)
                 .toLowerCase()
-                .includes(search)
-        );
+                .includes(searchTerm.toLowerCase())
+    );
 
-    });
-
-
-    // ============================================================
-    // RENDER
-    // ============================================================
+    /*
+     * ============================
+     * VISTA
+     * ============================
+     */
 
     return (
-
-        <main>
-
-            {/* ==================================================
-                USUARIO NO AUTENTICADO
-            ================================================== */}
-
+        <>
             <UnauthenticatedTemplate>
 
-                <h1>Autenticación Requerida</h1>
+                <div className="container mt-5">
 
-                <div className="forms__box text-center margin__flex">
+                    <div className="forms__box text-center">
 
-                    <button
-                        type="button"
-                        className="btn__filter"
-                        onClick={handleLogin}
-                    >
-                        Iniciar Sesión con Microsoft
-                    </button>
+                        <h1 className="h1__fondo">
+                            Autenticación Requerida
+                        </h1>
+
+                        <p className="text-muted">
+                            Debes iniciar sesión para acceder
+                            al catálogo de productos.
+                        </p>
+
+                        <button
+                            type="button"
+                            className="btn__filter"
+                            onClick={handleLogin}
+                        >
+                            Iniciar Sesión con Microsoft
+                        </button>
+
+                    </div>
 
                 </div>
 
             </UnauthenticatedTemplate>
 
-
-            {/* ==================================================
-                USUARIO AUTENTICADO
-            ================================================== */}
-
             <AuthenticatedTemplate>
 
-                {/* TÍTULO */}
+                <div className="container mt-4">
 
-                <div className="h1__fondo">
+                    <h1 className="h1__fondo">
+                        Gestión de Catálogo
+                    </h1>
 
-                    <h1>Gestión de Catálogo</h1>
-
-                </div>
-
-
-                {/* ==================================================
-                    INFORMACIÓN DEL USUARIO / ROL
-                ================================================== */}
-
-                <div className="forms__box">
-
-                    <div className="inputs__row">
-
-                        <div className="filter__group">
-
-                            <label>Usuario:</label>
-
-                            <span className="text-white">
-
-                                {account?.name ||
-                                    account?.username ||
-                                    'Usuario Autenticado'}
-
-                            </span>
-
+                    {errorMsg && (
+                        <div className="alert-error">
+                            {errorMsg}
                         </div>
+                    )}
 
-
-                        <div className="filter__group">
-
-                            <label>Rol:</label>
-
-                            <span
-                                className={`badge ${
-                                    isAdmin
-                                        ? 'bg-danger'
-                                        : isOperator
-                                            ? 'bg-warning text-dark'
-                                            : 'bg-info text-dark'
-                                }`}
-                            >
-
-                                {isAdmin
-                                    ? 'ADMIN'
-                                    : isOperator
-                                        ? 'OPERADOR'
-                                        : 'CLIENTE'}
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {/* ==================================================
-                    FORMULARIO CREAR / EDITAR
-                ================================================== */}
-
-                {(canCreate || canEdit) && (
-
-                    <div className="forms__box">
-
-                        <form
-                            onSubmit={
-                                editingId
-                                    ? handleUpdateProduct
-                                    : handleCreateProduct
-                            }
+                    {successMsg && (
+                        <div
+                            className="alert-error"
+                            style={{
+                                color: '#059669',
+                                borderColor: '#059669',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                            }}
                         >
+                            {successMsg}
+                        </div>
+                    )}
 
-                            <h5 className="text-white mb-4">
+                    {/*
+                     * ============================
+                     * FORMULARIO
+                     * ============================
+                     */}
 
-                                {editingId
-                                    ? `Editar Producto: ${editingId}`
-                                    : 'Crear Nuevo Producto'}
+                    {(canCreate || editingId) && (
 
-                            </h5>
+                        <div className="forms__box mb-4">
 
-
-                            <div className="inputs__row">
-
-                                {/* ID */}
-
-                                <div className="filter__group">
-
-                                    <label htmlFor="productId">
-                                        ID Producto:
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="productId"
-                                        value={productId}
-                                        onChange={(e) =>
-                                            setProductId(e.target.value)
-                                        }
-                                        disabled={!!editingId}
-                                        placeholder="Ej: PROD-001"
-                                    />
-
-                                </div>
-
-
-                                {/* NOMBRE */}
-
-                                <div className="filter__group">
-
-                                    <label htmlFor="productName">
-                                        Nombre:
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="productName"
-                                        value={productName}
-                                        onChange={(e) =>
-                                            setProductName(e.target.value)
-                                        }
-                                        placeholder="Nombre del producto"
-                                    />
-
-                                </div>
-
-
-                                {/* PRECIO */}
-
-                                <div className="filter__group">
-
-                                    <label htmlFor="productPrice">
-                                        Precio:
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        id="productPrice"
-                                        min="0"
-                                        step="0.01"
-                                        value={productPrice}
-                                        onChange={(e) =>
-                                            setProductPrice(e.target.value)
-                                        }
-                                        placeholder="0"
-                                    />
-
-                                </div>
-
-
-                                {/* STOCK */}
-
-                                <div className="filter__group">
-
-                                    <label htmlFor="productStock">
-                                        Stock:
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        id="productStock"
-                                        min="0"
-                                        step="1"
-                                        value={productStock}
-                                        onChange={(e) =>
-                                            setProductStock(e.target.value)
-                                        }
-                                        placeholder="0"
-                                    />
-
-                                </div>
-
-                            </div>
-
-
-                            {/* BOTONES */}
-
-                            <div
-                                className="inputs__row"
+                            <h3
                                 style={{
-                                    marginTop: '15px',
-                                    gap: '10px'
+                                    color: 'var(--accent-red)',
+                                    marginBottom: '20px',
+                                    fontWeight: 'bold'
                                 }}
                             >
+                                {editingId
+                                    ? 'Editar Producto'
+                                    : 'Nuevo Producto'}
+                            </h3>
 
-                                <button
-                                    type="submit"
-                                    className="btn__filter"
-                                    disabled={loading}
-                                >
+                            <form
+                                onSubmit={
+                                    editingId
+                                        ? handleUpdateProduct
+                                        : handleCreateProduct
+                                }
+                            >
 
-                                    {loading
-                                        ? 'Procesando...'
-                                        : editingId
-                                            ? 'Guardar Cambios'
-                                            : '+ Crear Producto'}
+                                <div className="inputs__row">
 
-                                </button>
+                                    <div className="filter__group">
 
+                                        <label>
+                                            ID Producto
+                                        </label>
 
-                                {editingId && (
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: PROD-001"
+                                            value={productId}
+                                            onChange={(event) =>
+                                                setProductId(
+                                                    event.target.value
+                                                )
+                                            }
+                                            disabled={!!editingId}
+                                            required
+                                        />
 
-                                    <button
-                                        type="button"
-                                        className="btn__filter"
-                                        onClick={resetForm}
-                                        disabled={loading}
-                                        style={{
-                                            backgroundColor:
-                                                'rgba(225, 29, 72, 0.1)'
-                                        }}
-                                    >
-                                        Cancelar Edición
-                                    </button>
+                                    </div>
 
-                                )}
+                                    <div className="filter__group">
 
+                                        <label>
+                                            Nombre
+                                        </label>
 
-                                <button
-                                    type="button"
-                                    className="btn__filter"
-                                    onClick={fetchProducts}
-                                    disabled={loading}
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: Notebook Lenovo"
+                                            value={productName}
+                                            onChange={(event) =>
+                                                setProductName(
+                                                    event.target.value
+                                                )
+                                            }
+                                            required
+                                        />
+
+                                    </div>
+
+                                    <div className="filter__group">
+
+                                        <label>
+                                            Precio
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            placeholder="Ej: 499990"
+                                            value={productPrice}
+                                            onChange={(event) =>
+                                                setProductPrice(
+                                                    event.target.value
+                                                )
+                                            }
+                                            min="0"
+                                            step="0.01"
+                                            required
+                                        />
+
+                                    </div>
+
+                                    <div className="filter__group">
+
+                                        <label>
+                                            Stock
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            placeholder="Ej: 25"
+                                            value={productStock}
+                                            onChange={(event) =>
+                                                setProductStock(
+                                                    event.target.value
+                                                )
+                                            }
+                                            min="0"
+                                            required
+                                        />
+
+                                    </div>
+
+                                </div>
+
+                                <div
+                                    className="hero-actions"
                                     style={{
-                                        backgroundColor:
-                                            'rgba(225, 29, 72, 0.1)'
+                                        marginTop: '10px'
                                     }}
                                 >
-                                    Recargar Lista
-                                </button>
 
-                            </div>
+                                    <button
+                                        type="submit"
+                                        className="btn__filter"
+                                        disabled={loading}
+                                        style={{
+                                            maxWidth: '250px',
+                                            margin: '0'
+                                        }}
+                                    >
+                                        {editingId
+                                            ? 'Actualizar'
+                                            : 'Crear Producto'}
+                                    </button>
 
-                        </form>
+                                    {editingId && (
 
-                    </div>
+                                        <button
+                                            type="button"
+                                            className="btn__filter"
+                                            onClick={clearForm}
+                                            disabled={loading}
+                                            style={{
+                                                maxWidth: '180px',
+                                                margin: '0'
+                                            }}
+                                        >
+                                            Cancelar
+                                        </button>
 
-                )}
+                                    )}
 
+                                </div>
 
-                {/* ==================================================
-                    MENSAJES
-                ================================================== */}
+                            </form>
 
-                {errorMsg && (
+                        </div>
 
-                    <div className="alert alert-danger my-3">
+                    )}
 
-                        {errorMsg}
+                    {/*
+                     * ============================
+                     * FILTRO
+                     * ============================
+                     */}
 
-                    </div>
+                    <div className="forms__box mb-4">
 
-                )}
+                        <div className="filter__group">
 
+                            <label>
+                                Buscar producto
+                            </label>
 
-                {successMsg && (
+                            <input
+                                type="text"
+                                placeholder="Buscar por ID o nombre..."
+                                value={searchTerm}
+                                onChange={(event) =>
+                                    setSearchTerm(
+                                        event.target.value
+                                    )
+                                }
+                            />
 
-                    <div className="alert alert-success my-3">
-
-                        {successMsg}
-
-                    </div>
-
-                )}
-
-
-                {/* ==================================================
-                    TABLA DE PRODUCTOS
-                ================================================== */}
-
-                <div className="table-glass-container mt-4">
-
-
-                    {/* BUSCADOR */}
-
-                    <div
-                        className="filter__group mb-3"
-                        style={{
-                            maxWidth: '400px'
-                        }}
-                    >
-
-                        <label htmlFor="searchProduct">
-
-                            Buscar Producto:
-
-                        </label>
-
-                        <input
-                            type="text"
-                            id="searchProduct"
-                            value={searchTerm}
-                            onChange={(e) =>
-                                setSearchTerm(e.target.value)
-                            }
-                            placeholder="Buscar por ID o nombre..."
-                        />
+                        </div>
 
                     </div>
 
+                    {/*
+                     * ============================
+                     * TABLA
+                     * ============================
+                     */}
 
-                    {/* CONTADOR */}
+                    <div className="table-glass-container">
 
-                    <div className="mb-3 text-muted">
+                        <table className="custom-glass-table">
 
-                        Mostrando{' '}
-
-                        <strong className="text-white">
-
-                            {filteredProducts.length}
-
-                        </strong>{' '}
-
-                        de{' '}
-
-                        <strong className="text-white">
-
-                            {products.length}
-
-                        </strong>{' '}
-
-                        productos.
-
-                    </div>
-
-
-                    {/* TABLA */}
-
-                    <table className="custom-glass-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>ID Producto</th>
-
-                                <th>Nombre</th>
-
-                                <th>Precio</th>
-
-                                <th>Stock</th>
-
-                                {(canUpdateStock ||
-                                    canEdit ||
-                                    canDelete) && (
-
-                                    <th>Acciones</th>
-
-                                )}
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {filteredProducts.length === 0 ? (
+                            <thead>
 
                                 <tr>
 
-                                    <td
-                                        colSpan={
-                                            canUpdateStock ||
-                                            canEdit ||
-                                            canDelete
-                                                ? 5
-                                                : 4
-                                        }
-                                        className="text-center py-4 text-muted"
-                                    >
+                                    <th>
+                                        ID Producto
+                                    </th>
 
-                                        {loading
-                                            ? 'Cargando productos...'
-                                            : products.length === 0
-                                                ? 'No hay productos registrados.'
-                                                : 'No se encontraron productos.'}
+                                    <th>
+                                        Nombre
+                                    </th>
 
-                                    </td>
+                                    <th>
+                                        Precio
+                                    </th>
+
+                                    <th>
+                                        Stock
+                                    </th>
+
+                                    <th>
+                                        Acciones
+                                    </th>
 
                                 </tr>
 
-                            ) : (
+                            </thead>
 
-                                filteredProducts.map((product) => (
+                            <tbody>
 
-                                    <tr key={product.id}>
+                                {loading && products.length === 0 ? (
 
-                                        {/* ID */}
-
-                                        <td data-label="ID Producto">
-
-                                            {product.id}
-
-                                        </td>
-
-
-                                        {/* NOMBRE */}
-
-                                        <td data-label="Nombre">
-
-                                            <strong className="text-white">
-
-                                                {product.name}
-
-                                            </strong>
-
-                                        </td>
-
-
-                                        {/* PRECIO */}
+                                    <tr>
 
                                         <td
-                                            data-label="Precio"
-                                            className="text-success fw-bold"
+                                            colSpan="5"
+                                            className="text-center"
                                         >
-
-                                            $
-                                            {Number(
-                                                product.price || 0
-                                            ).toLocaleString(
-                                                'es-CL'
-                                            )}
-
+                                            Cargando productos...
                                         </td>
-
-
-                                        {/* STOCK */}
-
-                                        <td data-label="Stock">
-
-                                            <span
-                                                className={`badge ${
-                                                    Number(product.stock) === 0
-                                                        ? 'bg-danger'
-                                                        : Number(product.stock) <= 5
-                                                            ? 'bg-warning text-dark'
-                                                            : 'bg-success'
-                                                }`}
-                                            >
-
-                                                {product.stock}
-
-                                            </span>
-
-                                        </td>
-
-
-                                        {/* ACCIONES */}
-
-                                        {(canUpdateStock ||
-                                            canEdit ||
-                                            canDelete) && (
-
-                                            <td data-label="Acciones">
-
-                                                <div
-                                                    className="d-flex flex-wrap gap-2"
-                                                >
-
-                                                    {/* ACTUALIZAR STOCK */}
-
-                                                    {canUpdateStock && (
-
-                                                        <button
-                                                            type="button"
-                                                            className="btn__filter"
-                                                            onClick={() =>
-                                                                handleUpdateStock(
-                                                                    product
-                                                                )
-                                                            }
-                                                            disabled={loading}
-                                                            style={{
-                                                                backgroundColor:
-                                                                    'rgba(225, 29, 72, 0.1)'
-                                                            }}
-                                                        >
-
-                                                            Stock
-
-                                                        </button>
-
-                                                    )}
-
-
-                                                    {/* EDITAR */}
-
-                                                    {canEdit && (
-
-                                                        <button
-                                                            type="button"
-                                                            className="btn__filter"
-                                                            onClick={() =>
-                                                                handleEditClick(
-                                                                    product
-                                                                )
-                                                            }
-                                                            disabled={loading}
-                                                            style={{
-                                                                backgroundColor:
-                                                                    'rgba(225, 29, 72, 0.1)'
-                                                            }}
-                                                        >
-
-                                                            Editar
-
-                                                        </button>
-
-                                                    )}
-
-
-                                                    {/* ELIMINAR */}
-
-                                                    {canDelete && (
-
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-danger"
-                                                            onClick={() =>
-                                                                handleDeleteProduct(
-                                                                    product.id,
-                                                                    product.name
-                                                                )
-                                                            }
-                                                            disabled={loading}
-                                                        >
-
-                                                            Eliminar
-
-                                                        </button>
-
-                                                    )}
-
-                                                </div>
-
-                                            </td>
-
-                                        )}
 
                                     </tr>
 
-                                ))
+                                ) : filteredProducts.length === 0 ? (
 
-                            )}
+                                    <tr>
 
-                        </tbody>
+                                        <td
+                                            colSpan="5"
+                                            className="text-center"
+                                        >
+                                            No se encontraron productos.
+                                        </td>
 
-                    </table>
+                                    </tr>
 
-                </div>
+                                ) : (
 
+                                    filteredProducts.map(
+                                        product => (
 
-                {/* ==================================================
-                    MENSAJE PARA CLIENTE
-                ================================================== */}
+                                            <tr
+                                                key={product.id}
+                                            >
 
-                {isCustomer && (
+                                                <td data-label="ID Producto">
+                                                    {product.id}
+                                                </td>
 
-                    <div className="forms__box mt-4">
+                                                <td data-label="Nombre">
+                                                    {product.name}
+                                                </td>
 
-                        <p className="text-white mb-0">
+                                                <td data-label="Precio">
+                                                    $
+                                                    {Number(
+                                                        product.price
+                                                    ).toLocaleString(
+                                                        'es-CL'
+                                                    )}
+                                                </td>
 
-                            <strong>Modo Cliente:</strong>{' '}
+                                                <td data-label="Stock">
+                                                    <span className="badge bg-secondary">
+                                                        {product.stock}
+                                                    </span>
+                                                </td>
 
-                            Puedes consultar los productos,
-                            precios y disponibilidad del catálogo.
-                            Las acciones de administración están
-                            restringidas según tu rol.
+                                                <td data-label="Acciones">
 
-                        </p>
+                                                    <div
+                                                        className="d-flex gap-2 flex-wrap"
+                                                    >
+
+                                                        {canUpdateStock && (
+
+                                                            <button
+                                                                type="button"
+                                                                className="btn__filter"
+                                                                onClick={() =>
+                                                                    handleUpdateStock(
+                                                                        product
+                                                                    )
+                                                                }
+                                                                disabled={loading}
+                                                                style={{
+                                                                    width: 'auto',
+                                                                    maxWidth: 'none',
+                                                                    height: '40px',
+                                                                    padding: '0 14px',
+                                                                    margin: '0'
+                                                                }}
+                                                            >
+                                                                Stock
+                                                            </button>
+
+                                                        )}
+
+                                                        {canEdit && (
+
+                                                            <button
+                                                                type="button"
+                                                                className="btn__filter"
+                                                                onClick={() =>
+                                                                    handleEditProduct(
+                                                                        product
+                                                                    )
+                                                                }
+                                                                disabled={loading}
+                                                                style={{
+                                                                    width: 'auto',
+                                                                    maxWidth: 'none',
+                                                                    height: '40px',
+                                                                    padding: '0 14px',
+                                                                    margin: '0'
+                                                                }}
+                                                            >
+                                                                Editar
+                                                            </button>
+
+                                                        )}
+
+                                                        {canDelete && (
+
+                                                            <button
+                                                                type="button"
+                                                                className="btn__filter"
+                                                                onClick={() =>
+                                                                    handleDeleteProduct(
+                                                                        product.id,
+                                                                        product.name
+                                                                    )
+                                                                }
+                                                                disabled={loading}
+                                                                style={{
+                                                                    width: 'auto',
+                                                                    maxWidth: 'none',
+                                                                    height: '40px',
+                                                                    padding: '0 14px',
+                                                                    margin: '0',
+                                                                    backgroundColor:
+                                                                        'rgba(225, 29, 72, 0.1)'
+                                                                }}
+                                                            >
+                                                                Eliminar
+                                                            </button>
+
+                                                        )}
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        )
+                                    )
+
+                                )}
+
+                            </tbody>
+
+                        </table>
 
                     </div>
 
-                )}
+                </div>
 
             </AuthenticatedTemplate>
-
-        </main>
+        </>
     );
-};
-
+}
