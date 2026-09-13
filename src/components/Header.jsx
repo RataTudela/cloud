@@ -11,6 +11,8 @@ export function Header() {
   const userName = account?.name || account?.username;
 
   // Detección de roles desde MSAL
+  console.log('Claims del Token:', account?.idTokenClaims);
+  console.log('Roles encontrados:', account?.idTokenClaims?.roles)
   const rawRoles = account?.idTokenClaims?.roles 
     || account?.idTokenClaims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
     || [];
@@ -26,7 +28,6 @@ export function Header() {
     ['customer', 'cliente'].includes(String(role).toLowerCase())
   ) || (!isAdmin && !isOperator);
 
-  // Etiquetas de rol en español
   const roleLabel = isAdmin ? 'Administrador' : isOperator ? 'Operador' : 'Cliente';
 
   const handleLogin = () => {

@@ -138,7 +138,6 @@ export function HomeView() {
                     {/* VISTA CUSTOMER */}
                     {isCustomer && (
                         <div className="summary-block">
-                            <h3 className="section-title">Resumen de Actividad (Customer)</h3>
                             {loading ? (
                                 <p className="text-muted">Cargando tus pedidos...</p>
                             ) : (
@@ -147,7 +146,7 @@ export function HomeView() {
                                         Últimos Pedidos y Estado Actual
                                     </h4>
                                     {recentMyOrders.length === 0 ? (
-                                        <div className="module-card">
+                                        <div className="module-card" style={{marginTop: '0px' }}>
                                             <p className="module-text">No registras pedidos recientes.</p>
                                             <Link to="/orders" className="module-link">Crear Pedido <i className="fa-solid fa-plus"></i></Link>
                                         </div>
