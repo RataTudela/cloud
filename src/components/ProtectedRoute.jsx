@@ -12,31 +12,11 @@ export function ProtectedRoute({ allowedRoles }) {
 
     const location = useLocation();
 
-    /*
-     * ============================
-     * DEBUG
-     * ============================
-     */
-
     console.log('==============================');
     console.log('PROTECTED ROUTE');
     console.log('Ruta actual:', location.pathname);
     console.log('MSAL:', inProgress);
     console.log('Cuentas:', accounts.length);
-
-    /*
-     * ============================
-     * ESPERAR A MSAL
-     * ============================
-     *
-     * Al entrar directamente a una ruta,
-     * MSAL puede tardar unos milisegundos
-     * en recuperar la sesión.
-     *
-     * NO debemos redirigir mientras
-     * todavía está procesando.
-     */
-
     if (inProgress !== InteractionStatus.None) {
 
         console.log(
@@ -61,21 +41,9 @@ export function ProtectedRoute({ allowedRoles }) {
         );
     }
 
-    /*
-     * ============================
-     * CUENTA
-     * ============================
-     */
-
     const account = accounts[0];
 
     console.log('Cuenta después de MSAL:', account);
-
-    /*
-     * ============================
-     * SIN SESIÓN
-     * ============================
-     */
 
     if (!account) {
 
@@ -94,12 +62,6 @@ export function ProtectedRoute({ allowedRoles }) {
         );
     }
 
-    /*
-     * ============================
-     * OBTENER ROLES
-     * ============================
-     */
-
     const rawRoles =
         account?.idTokenClaims?.roles ||
         account?.idTokenClaims?.[
@@ -110,12 +72,6 @@ export function ProtectedRoute({ allowedRoles }) {
     const userRoles = Array.isArray(rawRoles)
         ? rawRoles
         : [rawRoles];
-
-    /*
-     * ============================
-     * NORMALIZAR ROLES
-     * ============================
-     */
 
     const normalizedUserRoles = userRoles.map(role =>
         String(role)
@@ -129,12 +85,6 @@ export function ProtectedRoute({ allowedRoles }) {
             .toLowerCase()
     );
 
-    /*
-     * ============================
-     * VALIDAR PERMISOS
-     * ============================
-     */
-
     const hasPermission = normalizedUserRoles.some(role =>
         normalizedAllowedRoles.includes(role)
     );
@@ -142,12 +92,6 @@ export function ProtectedRoute({ allowedRoles }) {
     console.log('Roles del usuario:', userRoles);
     console.log('Roles permitidos:', allowedRoles);
     console.log('Tiene permiso:', hasPermission);
-
-    /*
-     * ============================
-     * ACCESO DENEGADO
-     * ============================
-     */
 
     if (!hasPermission) {
 
@@ -162,12 +106,6 @@ export function ProtectedRoute({ allowedRoles }) {
             />
         );
     }
-
-    /*
-     * ============================
-     * ACCESO PERMITIDO
-     * ============================
-     */
 
     console.log(
         '✅ ACCESO PERMITIDO:',

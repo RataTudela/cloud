@@ -17,7 +17,6 @@ async function main() {
       msalInstance.setActiveAccount(redirectResponse.account);
     }
   } catch (error) {
-    // Si hay un hash obsoleto en la URL, lo borramos automáticamente
     if (window.location.hash.includes('code=')) {
       window.history.replaceState(null, '', window.location.pathname);
     }

@@ -3,7 +3,6 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/
 import { loginRequest } from '../config/authConfig';
 import { useApi } from '../hooks/useApi';
 
-// RUTA RELATIVA: API Gateway antepondrá VITE_API_GATEWAY_URL automáticamente
 const CATALOG_ENDPOINT = '/api/catalog/productos';
 
 export function CatalogPage() {
