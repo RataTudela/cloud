@@ -3,7 +3,7 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/
 import { Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+const ORDERS_ENDPOINT = '/api/orders';
 
 export function HomeView() {
     const { accounts } = useMsal();
@@ -31,16 +31,10 @@ export function HomeView() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (accounts.length > 0) {
-            loadDashboardData();
-        }
-    }, [accounts]);
-
     const loadDashboardData = async () => {
         setLoading(true);
         try {
-            const resOrders = await fetchWithToken(`${API_BASE}/api/orders`);
+            const resOrders = await fetchWithToken(ORDERS_ENDPOINT);
             if (resOrders.ok) {
                 const ordersData = await resOrders.json();
                 setOrders(Array.isArray(ordersData) ? ordersData : [ordersData]);
@@ -52,6 +46,11 @@ export function HomeView() {
         }
     };
 
+    useEffect(() => {
+        if (accounts.length > 0) {
+            loadDashboardData();
+        }
+    }, [accounts]);
 
     const totalSales = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const totalOrdersCount = orders.length;
@@ -142,11 +141,11 @@ export function HomeView() {
                                 <p className="text-muted">Cargando tus pedidos...</p>
                             ) : (
                                 <>
-                                    <h4 className="section-title" style={{ fontSize: '1rem', marginBottom: '1rem' }}>
+                                    <h4 className="section-title customer-summary-title">
                                         Últimos Pedidos y Estado Actual
                                     </h4>
                                     {recentMyOrders.length === 0 ? (
-                                        <div className="module-card" style={{marginTop: '0px' }}>
+                                        <div className="module-card empty-orders-card">
                                             <p className="module-text">No registras pedidos recientes.</p>
                                             <Link to="/orders" className="module-link">Crear Pedido <i className="fa-solid fa-plus"></i></Link>
                                         </div>
@@ -155,7 +154,7 @@ export function HomeView() {
                                             {recentMyOrders.map(order => (
                                                 <article key={order.id} className="module-card">
                                                     <span className="module-tag">Orden #{order.id}</span>
-                                                    <h4 className="module-title" style={{ fontSize: '1.2rem' }}>
+                                                    <h4 className="module-title order-card-status">
                                                         Estado: {order.status}
                                                     </h4>
                                                     <p className="module-text">
@@ -189,6 +188,7 @@ export function HomeView() {
                     </div>
                 </section>
             </AuthenticatedTemplate>
+
             <UnauthenticatedTemplate>
                 <div className="h1__fondo">
                     <h1>Pedidos360</h1>

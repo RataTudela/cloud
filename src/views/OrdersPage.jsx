@@ -4,14 +4,15 @@ import { InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from '../config/authConfig';
 import { useApi } from '../hooks/useApi';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
-const ORDERS_API_URL = `${API_BASE}/api/orders`;
-const PRODUCTS_API_URL = `${API_BASE}/api/products`;
+// Rutas relativas del API Gateway
+const ORDERS_ENDPOINT = '/api/orders';
+const PRODUCTS_ENDPOINT = '/api/catalog/productos';
 
 export const OrdersPage = () => {
     const { instance, accounts, inProgress } = useMsal();
     const { fetchWithToken } = useApi();
     const account = accounts[0];
+    
     const rawRoles = account?.idTokenClaims?.roles 
         || account?.idTokenClaims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
         || [];
@@ -57,7 +58,7 @@ export const OrdersPage = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await fetchWithToken(PRODUCTS_API_URL);
+            const response = await fetchWithToken(PRODUCTS_ENDPOINT);
             if (response.ok) {
                 const data = await response.json();
                 setProducts(data);
@@ -76,7 +77,7 @@ export const OrdersPage = () => {
         setLoading(true);
         setErrorMsg('');
         try {
-            const response = await fetchWithToken(ORDERS_API_URL);
+            const response = await fetchWithToken(ORDERS_ENDPOINT);
             if (response.ok) {
                 const data = await response.json();
                 setOrders(Array.isArray(data) ? data : [data]);
@@ -129,7 +130,7 @@ export const OrdersPage = () => {
             const newOrderId = `ORD-${Math.floor(Math.random() * 900) + 100}`;
             const totalAmount = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
 
-            const res = await fetchWithToken(ORDERS_API_URL, {
+            const res = await fetchWithToken(ORDERS_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -167,7 +168,7 @@ export const OrdersPage = () => {
         setSuccessMsg('');
 
         try {
-            const res = await fetchWithToken(`${ORDERS_API_URL}/${orderId}/status?newStatus=${newStatus}`, {
+            const res = await fetchWithToken(`${ORDERS_ENDPOINT}/${orderId}/status?newStatus=${newStatus}`, {
                 method: 'PUT'
             });
 
@@ -299,7 +300,7 @@ export const OrdersPage = () => {
                 )}
                 {errorMsg && <div className="alert alert-danger my-3">{errorMsg}</div>}
                 {successMsg && <div className="alert alert-success my-3">{successMsg}</div>}
-                {/* Tabla de Resultados con Efecto Glass y Responsiva */}
+                {/* Tabla de Resultados */}
                 <div className="table-glass-container mt-4">
                     <div className="filter__group mb-3" style={{ maxWidth: '300px' }}>
                         <label htmlFor="statusFilter">Filtrar por Estado:</label>

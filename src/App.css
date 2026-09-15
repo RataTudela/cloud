@@ -1,10 +1,27 @@
+/* ==========================================================================
+   1. IMPORTS & CONFIGURACIÓN GLOBAL
+   ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 @import '@fortawesome/fontawesome-free/css/all.min.css';
+
+:root {
+  --font-mono: 'Roboto Mono', monospace;
+  --bg-main: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent-red: #e11d48;
+  --accent-red-hover: #be123c;
+  --border-color: rgba(225, 29, 72, 0.25);
+  --shadow-sm: 0 4px 12px rgba(225, 29, 72, 0.08);
+  --shadow-hover: 0 8px 24px rgba(225, 29, 72, 0.2);
+}
 
 * {
   margin: 0;
   padding: 0;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 html, body {
@@ -12,52 +29,6 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-}
-
-#root, .app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-}
-
-main {
-  flex: 1 0 auto;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px 40px 20px;
-  overflow-x: hidden;
-}
-
-footer {
-  flex-shrink: 0;
-  width: 100%;
-}
-
-ul, ol, li {
-  list-style: none !important;
-  list-style-type: none !important;
-  padding-left: 0;
-  margin-left: 0;
-}
-
-/* --- VARIABLES GLOBALES --- */
-:root {
-  --font-mono: 'Roboto Mono', monospace;
-  --bg-main: #ffffff;             
-  --header-bg: rgba(255, 255, 255, 0.85);           
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --text-primary: #0f172a;       
-  --text-secondary: #475569;     
-  --accent-red: #e11d48;          
-  --accent-red-hover: #be123c;    
-  --border-color: rgba(225, 29, 72, 0.25);
-  --shadow-sm: 0 4px 12px rgba(225, 29, 72, 0.08);
-  --shadow-hover: 0 8px 24px rgba(225, 29, 72, 0.2);
 }
 
 body {
@@ -74,6 +45,7 @@ body {
   overflow-x: hidden;
 }
 
+/* Efectos de fondo difuminados */
 body::before,
 body::after {
   content: '';
@@ -95,21 +67,50 @@ body::before {
 body::after {
   width: 450px;
   height: 450px;
-  background: rgba(244, 63, 94, 0.18); 
+  background: rgba(244, 63, 94, 0.18);
   filter: blur(130px);
   top: 250px;
   right: 5%;
+}
+
+/* Contenedores Principales */
+#root, .app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 40px 20px;
+  overflow-x: hidden;
 }
 
 header, footer {
   width: 100%;
 }
 
+ul, ol, li {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0;
+  margin-left: 0;
+}
+
 .margin__flex {
   display: flex;
 }
 
-/* --- HEADER --- */
+/* ==========================================================================
+   2. NAVEGACIÓN Y HEADER
+   ========================================================================== */
 .main-header {
   width: 100%;
   position: relative;
@@ -150,7 +151,7 @@ header, footer {
 
 .logo__into {
   position: relative;
-  z-index: 1; 
+  z-index: 1;
   width: 40px;
   height: 40px;
   background-color: #ffffff;
@@ -175,7 +176,6 @@ header, footer {
   to { transform: rotate(360deg); }
 }
 
-/* Botón Hamburguesa */
 .nav__toggle {
   display: none;
   background: transparent;
@@ -217,10 +217,10 @@ header, footer {
 }
 
 .header__nav a:hover {
-  color: var(--accent-red); 
+  color: var(--accent-red);
 }
 
-/* --- BOTONES Y PERFIL MSAL EN HEADER --- */
+/* Módulo de Autenticación en Header */
 .nav__auth {
   display: flex;
   justify-content: flex-end;
@@ -273,12 +273,14 @@ header, footer {
   box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
 }
 
-/* --- TITULOS Y CONTENEDORES DE FORMULARIO --- */
+/* ==========================================================================
+   3. FORMULARIOS, INPUTS Y TITULARES
+   ========================================================================== */
 .h1__fondo {
-  background: rgba(255, 255, 255, 0.75); 
-  border: 1px solid var(--border-color); 
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--border-color);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px); 
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 0 20px rgba(225, 29, 72, 0.08);
   max-width: 1200px;
   width: 100%;
@@ -296,15 +298,22 @@ h1 {
 }
 
 .forms__box {
-  background: rgba(255, 255, 255, 0.75); 
-  border: 1px solid var(--border-color); 
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--border-color);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px); 
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 0 20px rgba(225, 29, 72, 0.08);
   max-width: 1200px;
   width: 100%;
   padding: 24px;
   border-radius: 12px;
+}
+
+.forms__box form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
 input, select {
@@ -323,13 +332,6 @@ input:focus, select:focus {
   outline: none;
   border-color: var(--accent-red);
   box-shadow: 0 0 8px rgba(225, 29, 72, 0.3);
-}
-
-.forms__box form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
 }
 
 .filter__group {
@@ -394,62 +396,9 @@ input:focus, select:focus {
   box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
 }
 
-/* --- FOOTER --- */
-.footer {
-  background: rgba(255, 255, 255, 0.9);
-  border-top: 1px solid var(--border-color);
-  padding: 24px 32px;
-  margin-top: auto;
-}
-
-.footer__container {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.footer__brand .footer__title {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--accent-red);
-}
-
-.footer__brand .footer__subtitle {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-.footer__status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-primary);
-  background: rgba(225, 29, 72, 0.08);
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  padding: 6px 12px;
-  border-radius: 20px;
-}
-
-.status__dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-red);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--accent-red);
-}
-
-.footer__copy {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* --- CART / TARJETAS DETALLE --- */
+/* ==========================================================================
+   4. TARJETAS Y GRID DE CARRITO / RESUMEN
+   ========================================================================== */
 .cart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -464,10 +413,10 @@ input:focus, select:focus {
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  background: rgba(255, 255, 255, 0.9); 
-  border: 1px solid var(--border-color); 
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-color);
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px); 
+  -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 4px 16px rgba(225, 29, 72, 0.08);
 }
 
@@ -490,9 +439,9 @@ input:focus, select:focus {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #ffffff; 
+  background: #ffffff;
   color: var(--accent-red);
-  border: 1px solid rgba(225, 29, 72, 0.4); 
+  border: 1px solid rgba(225, 29, 72, 0.4);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: all 0.2s ease;
@@ -509,7 +458,9 @@ input:focus, select:focus {
   box-shadow: 0 0 10px rgba(225, 29, 72, 0.4);
 }
 
-/* --- TABLA CLARA Y RESPONSIVA --- */
+/* ==========================================================================
+   5. TABLAS DE DATOS (GLASSMORPHISM)
+   ========================================================================== */
 .table-glass-container {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
@@ -568,7 +519,9 @@ input:focus, select:focus {
   border-right: 1px solid var(--border-color);
 }
 
-/* --- AUDIT & TIMELINE --- */
+/* ==========================================================================
+   6. SECCIÓN DE AUDITORÍA Y ALERTAS
+   ========================================================================== */
 .audit-container {
   margin-top: 2rem;
   width: 100%;
@@ -650,6 +603,12 @@ input:focus, select:focus {
   color: var(--text-secondary);
 }
 
+.audit-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+}
+
 .alert-error {
   margin-top: 1.5rem;
   padding: 1rem;
@@ -658,12 +617,6 @@ input:focus, select:focus {
   color: var(--accent-red-hover);
   border-radius: 8px;
   font-family: var(--font-mono);
-}
-
-.audit-empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem;
 }
 
 .alert-denied {
@@ -676,7 +629,9 @@ input:focus, select:focus {
   font-weight: bold;
 }
 
-/* --- HOME / DASHBOARD --- */
+/* ==========================================================================
+   7. DASHBOARD & HOME
+   ========================================================================== */
 .home-container {
   width: 100%;
   max-width: 1200px;
@@ -919,11 +874,68 @@ input:focus, select:focus {
   margin-bottom: 0.5rem;
 }
 
-/* ==========================================
-   MEDIA QUERIES (GRID DASHBOARD & RESPONSIVIDAD MÓVIL)
-   ========================================== */
+/* ==========================================================================
+   8. FOOTER
+   ========================================================================== */
+.footer {
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid var(--border-color);
+  padding: 24px 32px;
+  margin-top: auto;
+}
 
-/* Dashboard en pantalla grande */
+.footer__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer__brand .footer__title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--accent-red);
+}
+
+.footer__brand .footer__subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.footer__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.status__dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-red);
+}
+
+.footer__copy {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   9. MEDIA QUERIES & RESPONSIVIDAD
+   ========================================================================== */
+
+/* Pantallas Grandes (Escritorio) */
 @media (min-width: 992px) {
   .home-container {
     display: grid;
@@ -950,7 +962,7 @@ input:focus, select:focus {
   }
 }
 
-/* Ajuste general para tablets y pantallas medianas */
+/* Pantallas Medianas (Tablets) */
 @media screen and (max-width: 900px) {
   .inputs__row {
     flex-direction: column;
@@ -973,7 +985,7 @@ input:focus, select:focus {
   }
 }
 
-/* Ajustes menú y layout en móviles (<= 768px) */
+/* Móviles (<= 768px) */
 @media (max-width: 768px) {
   .header__nav {
     display: flex;
@@ -1029,6 +1041,7 @@ input:focus, select:focus {
     max-width: 240px;
   }
 
+  /* Transformación de tablas a vista Cards en pantallas pequeñas */
   .custom-glass-table, 
   .custom-glass-table thead, 
   .custom-glass-table tbody, 
@@ -1085,4 +1098,47 @@ input:focus, select:focus {
   .forms__box, .h1__fondo {
     padding: 16px;
   }
+}
+
+/* Estilos para el Catálogo */
+.alert-success {
+    color: #059669;
+    border-color: #059669;
+    background-color: rgba(16, 185, 129, 0.1);
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid;
+}
+
+.form-title {
+    color: var(--accent-red);
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.action-buttons-group {
+    margin-top: 10px;
+}
+
+.btn-submit {
+    max-width: 250px;
+    margin: 0;
+}
+
+.btn-cancel {
+    max-width: 180px;
+    margin: 0;
+}
+
+.btn-action-table {
+    width: auto !important;
+    max-width: none !important;
+    height: 40px;
+    padding: 0 14px;
+    margin: 0 !important;
+}
+
+.btn-delete {
+    background-color: rgba(225, 29, 72, 0.1) !important;
 }

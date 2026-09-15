@@ -8,21 +8,21 @@ export function ProtectedData() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Obtener el nombre o email del usuario logueado en Azure
   const activeAccount = instance.getActiveAccount();
   const userName = activeAccount?.name || activeAccount?.username || 'Benjamin Olavarria';
 
   const handleCrearOrden = async () => {
     setLoading(true);
     try {
-      const res = await fetchWithToken('http://localhost:8081/orders', {
+      // Ahora apunta a la ruta proxied /api/orders en AWS
+      const res = await fetchWithToken('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: `ORD-${Math.floor(Math.random() * 900) + 100}`, // ID dinámico
-          customer: userName, // Envía el usuario autenticado
+          id: `ORD-${Math.floor(Math.random() * 900) + 100}`,
+          customer: userName,
           status: 'CREADO',
           description: 'Orden creada desde React Frontend',
         }),

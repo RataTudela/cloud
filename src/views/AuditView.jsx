@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
+import { loginRequest } from '../config/authConfig';
 import { useApi } from '../hooks/useApi';
 
 export function AuditView() {
-  const { accounts } = useMsal();
+  const { instance, accounts } = useMsal();
   const account = accounts[0];
   const { fetchWithToken } = useApi();
 
@@ -27,6 +28,14 @@ export function AuditView() {
     fechaFin: '',
     evento: 'todo'
   });
+
+  const handleLogin = async () => {
+    try {
+      await instance.loginRedirect(loginRequest);
+    } catch (err) {
+      console.error('Error al iniciar sesión:', err);
+    }
+  };
 
   const fetchAuditLogs = async (customFilters = filters) => {
     setLoading(true);
@@ -106,7 +115,7 @@ export function AuditView() {
         {!isAdminOrAuditor ? (
           <div className="forms__box alert-denied" style={{ marginTop: '20px' }}>
             <p className="text-danger mb-0">
-              <i className="fa-solid fa-triangle-exclamation"></i> Acceso denegado: Se requieren permisos de <strong>Administrador</strong> o <strong>Auditor</strong> para consultar el timeline de eventos.
+              <i className="fa-solid fa-triangle-exclamation"></i> Acceso denegado: Se requieren permisos de <strong>Administrador</strong> o <strong>Auditor</strong> para consultar la auditoría.
             </p>
           </div>
         ) : (
@@ -229,10 +238,13 @@ export function AuditView() {
         )}
       </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
-        <div className="forms__box alert-denied">
+        <div className="forms__box alert-denied" style={{ textAlign: 'center', marginTop: '20px' }}>
           <p>
             <i className="fa-solid fa-lock"></i> Acceso denegado. Debes iniciar sesión con Azure AD para consultar la auditoría.
           </p>
+          <button className="btn__filter" onClick={handleLogin}>
+            Iniciar Sesión
+          </button>
         </div>
       </UnauthenticatedTemplate>
     </main>
