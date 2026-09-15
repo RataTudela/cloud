@@ -8,7 +8,7 @@ export const msalConfig = {
   },
   cache: {
     cacheLocation: 'localStorage',
-    storeAuthStateInCookie: true, // Mantiene el estado de la petición durante redirecciones o popups
+    storeAuthStateInCookie: true, 
   },
   system: {
     loggerOptions: {

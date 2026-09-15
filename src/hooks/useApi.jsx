@@ -25,7 +25,6 @@ export function useApi() {
       }
     }
 
-    // Construye la URL completa apuntando al API Gateway
     const fullUrl = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
 
     return fetch(fullUrl, {

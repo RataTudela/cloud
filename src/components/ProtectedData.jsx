@@ -14,7 +14,6 @@ export function ProtectedData() {
   const handleCrearOrden = async () => {
     setLoading(true);
     try {
-      // Ahora apunta a la ruta proxied /api/orders en AWS
       const res = await fetchWithToken('/api/orders', {
         method: 'POST',
         headers: {
