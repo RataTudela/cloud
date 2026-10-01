@@ -87,7 +87,11 @@ export function HomeView() {
                         <div className="summary-block">
                             <h3 className="section-title">Resumen Global (KPIs Admin)</h3>
                             {loading ? (
-                                <p className="text-muted">Cargando métricas...</p>
+                                <div className='bar'>
+                                    <div className='bar-inside'>
+                                    
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="modules-grid">
                                     <article className="module-card">

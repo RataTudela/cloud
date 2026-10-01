@@ -114,6 +114,7 @@ header, footer {
   width: 100%;
   position: relative;
   z-index: 100;
+  
 }
 
 .header__nav {
@@ -127,6 +128,28 @@ header, footer {
   box-shadow: 0 2px 15px rgba(225, 29, 72, 0.08);
   border-bottom: 1px solid var(--border-color);
   width: 100%;
+  position: fixed;
+  animation: padding linear both;
+  animation-timeline: scroll();
+  animation-range: entry 0% cover 20%;
+}
+
+@keyframes logoDissapear {
+    from{
+      opacity: 1;
+    }to{
+      opacity: 0;
+    }
+}
+@keyframes padding {
+  from{
+      padding: 12px 32px;
+      background-color: var(--header-bg);
+  }to{
+    padding: 0px;
+    background-color: transparent;
+    backdrop-filter: blur(6px);
+  }
 }
 
 .logo {
@@ -137,6 +160,9 @@ header, footer {
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: logoDissapear linear both;
+  animation-timeline: scroll();
+  animation-range: entry 0% cover 20%;
 }
 
 .logo::before {
@@ -285,6 +311,8 @@ header, footer {
   padding: 12px 24px;
   border-radius: 12px;
   margin: 20px 0;
+  position: relative;
+  margin-top: 80px;
 }
 
 h1 {
@@ -685,6 +713,7 @@ input:focus, select:focus {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  animation: aparecer 2s both;
 }
 
 .hero-card {
@@ -701,6 +730,7 @@ input:focus, select:focus {
   gap: 1rem;
   position: relative;
   overflow: hidden;
+  animation: translateY 1s both;
 }
 
 .hero-card::before {
@@ -731,7 +761,44 @@ input:focus, select:focus {
   font-weight: 700;
   color: #1e293b;
   margin: 0;
+  background: linear-gradient(
+    90deg,
+    #ff0040 0%,
+    #000000 25%,
+    #ff0040 50%,
+    #000000 75%,
+    #ff0040 100%
+  );
+  background-clip: text;
+  background-size: 200% auto;
+  color: transparent;
+  animation: colors 4s infinite both;
 }
+
+.bar{
+  border-radius: 32px;
+  width: 100%;
+  border: 3px solid var(--accent-red);
+  padding: 2px;
+}
+
+.bar-inside{
+  width: 10%;  
+  padding: 5px;
+  background-color: var(--accent-red);
+  animation: rellenar 1.8s both;
+  border-radius: 38px;
+  opacity: .8;
+}
+
+@keyframes rellenar {
+  from{
+    width: 10%;
+  }to{
+    width: 100%;
+  }
+}
+
 
 .hero-description {
   font-size: 1rem;
@@ -811,7 +878,34 @@ input:focus, select:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
+  animation: translateYabajo 1s both;
 }
+
+/* Keyframes */
+@keyframes colors {
+  from{
+    background-position: 0% center;
+  }to{
+    background-position: 200% center;
+  }
+}
+
+@keyframes aparecer {
+  from{
+    opacity: 0;
+  }to{
+    opacity: 1;
+  } 
+}
+
+@keyframes translateY {
+    from{
+      transform: translateY(-500px);
+    }to{
+      transform: translateY(0px);
+    }
+}
+
 
 .module-card {
   background: rgba(255, 255, 255, 0.85);
@@ -919,11 +1013,9 @@ input:focus, select:focus {
   margin-bottom: 0.5rem;
 }
 
-/* ==========================================
-   MEDIA QUERIES (GRID DASHBOARD & RESPONSIVIDAD MÓVIL)
-   ========================================== */
+/* MEDIAS QUERIES */
 
-/* Dashboard en pantalla grande */
+
 @media (min-width: 992px) {
   .home-container {
     display: grid;
@@ -950,8 +1042,22 @@ input:focus, select:focus {
   }
 }
 
-/* Ajuste general para tablets y pantallas medianas */
 @media screen and (max-width: 900px) {
+  .header__nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px;
+    position: relative;
+    flex-flow: column;
+  }
+  
+  .modules-grid{
+    display: flex;
+    flex: 1;
+    width: 100%;
+  }
+
+
   .inputs__row {
     flex-direction: column;
   }
@@ -975,13 +1081,6 @@ input:focus, select:focus {
 
 /* Ajustes menú y layout en móviles (<= 768px) */
 @media (max-width: 768px) {
-  .header__nav {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 20px;
-    position: relative;
-  }
-
   .nav__toggle {
     display: block;
   }
@@ -1010,6 +1109,34 @@ input:focus, select:focus {
     flex-direction: column;
     gap: 14px;
     width: 100%;
+  }
+
+  .header__nav{
+    position: fixed;
+  }
+
+  @keyframes padding {
+  from{
+      background-color: var(--header-bg);
+  }to{
+    padding: 0px;
+    background-color: transparent;
+    backdrop-filter: blur(6px);
+  }
+  }
+
+  @keyframes logoDissapear {
+    from{
+      opacity: 1;
+    }to{
+      opacity: 0;
+      position: absolute;
+      top: -500px;
+    }
+  }
+
+  .h1__fondo{
+    margin-top: 130px;
   }
 
   .nav__auth {
