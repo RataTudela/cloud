@@ -267,7 +267,16 @@ header, footer { width: 100%; }
   max-width: 1200px;
 }
 
-.h1__fondo { margin: 100px 0 20px; padding: 12px 24px; }
+.group--authenticated{
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  margin: auto;
+  grid-column: span 12;
+}
+
+
+.h1__fondo { margin: 100px 0 20px; padding: 12px 24px;}
 .forms__box { padding: 24px; }
 
 h1 {
@@ -422,7 +431,8 @@ input:focus, select:focus {
 }
 
 .hero-badge {
-  display: inline-flex;
+  width: 175px;
+  display: flex;
   gap: 8px;
   background: var(--accent-red-alpha-10);
   color: var(--accent-red);

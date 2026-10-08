@@ -35,12 +35,6 @@ export function CatalogPage() {
 
     const [editingId, setEditingId] = useState(null);
 
-    /*
-     * ============================
-     * ROLES
-     * ============================
-     */
-
     const account = accounts[0] || instance.getActiveAccount();
 
     const rawRoles =
@@ -74,12 +68,6 @@ export function CatalogPage() {
     const canDelete = isAdmin;
     const canUpdateStock = isAdmin || isOperator;
 
-    /*
-     * ============================
-     * LOGIN
-     * ============================
-     */
-
     const handleLogin = async () => {
         try {
             await instance.loginRedirect(loginRequest);
@@ -88,12 +76,6 @@ export function CatalogPage() {
             setErrorMsg('No fue posible iniciar sesión.');
         }
     };
-
-    /*
-     * ============================
-     * OBTENER PRODUCTOS
-     * ============================
-     */
 
     const fetchProducts = async () => {
 
@@ -133,12 +115,6 @@ export function CatalogPage() {
         }
     };
 
-    /*
-     * ============================
-     * CARGAR AL INICIAR
-     * ============================
-     */
-
     useEffect(() => {
 
         if (accounts.length > 0) {
@@ -146,12 +122,6 @@ export function CatalogPage() {
         }
 
     }, [accounts]);
-
-    /*
-     * ============================
-     * LIMPIAR FORMULARIO
-     * ============================
-     */
 
     const clearForm = () => {
 
@@ -161,12 +131,6 @@ export function CatalogPage() {
         setProductStock('');
         setEditingId(null);
     };
-
-    /*
-     * ============================
-     * CREAR PRODUCTO
-     * ============================
-     */
 
     const handleCreateProduct = async (event) => {
 
@@ -229,12 +193,6 @@ export function CatalogPage() {
         }
     };
 
-    /*
-     * ============================
-     * PREPARAR EDICIÓN
-     * ============================
-     */
-
     const handleEditProduct = (product) => {
 
         setEditingId(product.id);
@@ -248,11 +206,6 @@ export function CatalogPage() {
         setSuccessMsg('');
     };
 
-    /*
-     * ============================
-     * ACTUALIZAR PRODUCTO
-     * ============================
-     */
 
     const handleUpdateProduct = async (event) => {
 
@@ -319,11 +272,6 @@ export function CatalogPage() {
         }
     };
 
-    /*
-     * ============================
-     * ELIMINAR PRODUCTO
-     * ============================
-     */
 
     const handleDeleteProduct = async (
         id,
@@ -385,11 +333,6 @@ export function CatalogPage() {
         }
     };
 
-    /*
-     * ============================
-     * ACTUALIZAR STOCK
-     * ============================
-     */
 
     const handleUpdateStock = async (
         product
@@ -467,12 +410,6 @@ export function CatalogPage() {
         }
     };
 
-    /*
-     * ============================
-     * FILTRO
-     * ============================
-     */
-
     const filteredProducts = products.filter(
         product =>
             String(product.id)
@@ -482,12 +419,6 @@ export function CatalogPage() {
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase())
     );
-
-    /*
-     * ============================
-     * VISTA
-     * ============================
-     */
 
     return (
         <>
@@ -711,11 +642,7 @@ export function CatalogPage() {
 
                     )}
 
-                    {/*
-                     * ============================
-                     * FILTRO
-                     * ============================
-                     */}
+                    {}
 
                     <div className="forms__box mb-4">
 
@@ -740,11 +667,7 @@ export function CatalogPage() {
 
                     </div>
 
-                    {/*
-                     * ============================
-                     * TABLA
-                     * ============================
-                     */}
+                    {}
 
                     <div className="table-glass-container">
 

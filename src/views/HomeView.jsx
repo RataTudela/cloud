@@ -194,6 +194,7 @@ export function HomeView() {
                 </section>
             </AuthenticatedTemplate>
             <UnauthenticatedTemplate>
+            <div className='group--authenticated'>
                 <div className="h1__fondo">
                     <h1>Pedidos360</h1>
                 </div>
@@ -201,11 +202,12 @@ export function HomeView() {
                     <div className="unauth-icon">
                         <i className="fa-solid fa-lock"></i>
                     </div>
-                    <h2 className="hero-title">Acceso Restringido</h2>
-                    <p className="hero-description">
-                        Debes iniciar sesión con tu cuenta corporativa en Azure AD para consultar la plataforma.
-                    </p>
-                </section>
+                        <h2 className="hero-title">Acceso Restringido</h2>
+                        <p className="hero-description">
+                            Debes iniciar sesión con tu cuenta corporativa en Azure AD para consultar la plataforma.
+                            </p>
+                    </section>
+                </div>
             </UnauthenticatedTemplate>
         </main>
     );
