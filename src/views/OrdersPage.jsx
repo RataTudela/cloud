@@ -146,6 +146,7 @@ export const OrdersPage = () => {
                 setSuccessMsg(`Orden ${newOrderId} creada exitosamente con total $${totalAmount.toLocaleString('es-CL')}.`);
                 setCartItems([]);
                 fetchOrders();
+                fetchProducts();
             } else {
                 setErrorMsg(`Error al crear la orden (HTTP ${res.status}).`);
             }
