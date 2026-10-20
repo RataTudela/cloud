@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# Pedidos360 - Frontend App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interfaz web principal del sistema Pedidos360, desarrollada para interactuar con la arquitectura de microservicios (`ms-orders`, `ms-catalog`, `ms-audit`, `ms-report`, etc.) y gestionar el control de acceso de usuarios.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+##Autenticación con MSAL
 
-## React Compiler
+La aplicación utiliza **MSAL (Microsoft Authentication Library)** para la gestión del flujo de autenticación mediante Microsoft Entra ID / Azure AD:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Inicio de Sesión:** Redirige al usuario al portal de autenticación seguro de Microsoft.
+* **Tokens JWT:** Gestiona y adjunta automáticamente los tokens Bearer en cada petición HTTP dirigida hacia los microservicios backend.
+* **Persistencia de Sesión:** Si los tokens expiran o se limpia el estado del backend/Docker, puede requerir cerrar sesión y reautenticarse para renovar el token activo.
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## 1. Ejecución en Entorno Local (Modo Prioritario)
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+### Prerrequisitos OBLIGATORIOS
+Para que la interfaz funcione de manera integral (cargar productos, crear órdenes, ver auditoría y reportes), **es indispensable tener corriendo en paralelo e
+el sistem de microservicios backend** en Docker, Asegurar  haber levantado previamente los contenedores desde la infraestructura central (`ms-orders`).
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Pasos de Inicio:
+
+1. **Instalar dependencias del proyecto:**
+   npm install
+Levantar el servidor de desarrollo local:
+
+npm run dev
+Acceso:
+Abre la aplicación en tu navegador ingresando a la URL local indicada en la consola (por defecto http://localhost:5173).
+
+2. Entorno AWS y Despliegue
+Cambio de Rama
+Para revisar la configuración orientada a producción / AWS, debes cambiar a la rama de despliegue correspondiente:
+
+aws cloud
+AVISO IMPORTANTE SOBRE ACCESO EN AWS
+Restricción de Cuenta Personal:
+
+La infraestructura de AWS y el registro de la aplicación en MSAL Azure AD están vinculados a mi cuenta personal de AWS y Microsoft Azure.
+
+Por esta razón, no será posible iniciar sesión ni ingresar a la aplicación desplegada en la nube con credenciales externas, ya que los permisos de autenticación y los dominios permitidos están restringidos exclusivamente hacia mi.
+
+Para probar el sistema utilizar el entorno Local.
